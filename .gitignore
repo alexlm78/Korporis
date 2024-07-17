@@ -361,6 +361,7 @@ tags
 
 # Local environment
 .env
+application.properties
 
 # Plugin directory
 /.quarkus/cli/plugins/
