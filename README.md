@@ -1,79 +1,120 @@
-# gestionemp
+# Instalacion basica de GestionEmp
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Prerrequisitos
+Antes de empezar, asegúrate de tener instalados los siguientes componentes en tu máquina:
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+1. **Java Development Kit (JDK) 11 o superior**.
+2. **Gradle**.
+3. **MySQL Server**.
 
-## Running the application in dev mode
+## Pasos de Instalación
 
-You can run your application in dev mode that enables live coding using:
+### 1. Instalar JDK
+Si no tienes el JDK instalado, puedes descargar e instalar el OpenJDK 11 o superior desde [AdoptOpenJDK](https://adoptopenjdk.net/).
 
-```shell script
-./gradlew quarkusDev
+### 2. Instalar Gradle
+Puedes seguir las instrucciones de la documentación oficial para instalar Gradle: [Installing Gradle](https://gradle.org/install/).
+
+### 3. Instalar y Configurar MySQL
+Descarga e instala MySQL Server desde [MySQL Downloads](https://dev.mysql.com/downloads/mysql/).
+
+Después de la instalación:
+
+- Inicia el servicio de MySQL.
+- Abre `mysql` en tu terminal o usa MySQL Workbench para crear una base de datos llamada `gestion`.
+
+```sql
+CREATE DATABASE gestion;
+CREATE USER 'gestion'@'localhost' IDENTIFIED BY 'gestion';
+GRANT ALL PRIVILEGES ON gestion.* TO 'gestion'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+### 4. Preparar tu Proyecto Quarkus
 
-## Packaging and running the application
+1. **Clona tu repositorio del proyecto o descárgalo en tu máquina local**.
 
-The application can be packaged using:
+2. **Configura el archivo `application.properties`**.
+   Dentro del directorio `src/main/resources/`, asegúrate de tener un archivo `application.properties` con el siguiente contenido:
+   
+   ```properties
+   quarkus.devservices.enabled=false 
 
-```shell script
-./gradlew build
-```
+   # Datasource for mysql 
+   quarkus.datasource.db-kind=mysql 
+   quarkus.datasource.username=gestion 
+   quarkus.datasource.password=gestion 
+   quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/gestion 
+   quarkus.hibernate-orm.database.generation=update 
+   quarkus.datasource.jdbc.driver=com.mysql.cj.jdbc.Driver
+   ```
+   
+   Modifica los datos de conexión si es necesario, dependiendo de tu configuración local.
 
-It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
+3. **Verifica el archivo `build.gradle`**.
+   Asegúrate de que tu archivo `build.gradle` tenga las dependencias necesarias para Quarkus y MySQL:
+   
+   ```groovy
+   plugins {
+       id 'java'
+       id 'io.quarkus' version '2.x.x' // Usar la versión correspondiente a tu proyecto
+   }
 
-The application is now runnable using `java -jar build/quarkus-app/quarkus-run.jar`.
+   repositories {
+       mavenCentral()
+   }
 
-If you want to build an _über-jar_, execute the following command:
+   dependencies {
+       implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+       implementation 'io.quarkus:quarkus-hibernate-orm'
+       implementation 'io.quarkus:quarkus-jdbc-mysql'
+       implementation 'io.quarkus:quarkus-resteasy'
+       implementation 'io.quarkus:quarkus-resteasy-jsonb'
+   }
 
-```shell script
-./gradlew build -Dquarkus.package.jar.type=uber-jar
-```
+   group 'com.example'
+   version '1.0.0-SNAPSHOT'
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
+   java {
+       sourceCompatibility = JavaVersion.VERSION_11
+       targetCompatibility = JavaVersion.VERSION_11
+   }
+   ```
 
-## Creating a native executable
+### 5. Construir y Ejecutar la Aplicación
 
-You can create a native executable using:
+1. **Construir la Aplicación**.
+   
+   Navega hasta la raíz de tu proyecto y ejecuta el siguiente comando para construir tu aplicación:
+   
+   ```sh
+   ./gradlew build
+   ```
 
-```shell script
-./gradlew build -Dquarkus.native.enabled=true
-```
+2. **Ejecutar la Aplicación en Modo Dev**.
+   
+   Para iniciar tu aplicación en modo desarrollo (dev mode) y así recargar automáticamente los cambios:
+   
+   ```sh
+   ./gradlew quarkusDev
+   ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+## Verifica la Instalación
+- La aplicación debería estar ejecutándose localmente en `http://localhost:8080`.
+- Puedes verificar la conexión a través de la consola de Quarkus y asegurarte de que la aplicación se conecta correctamente a la base de datos MySQL.
 
-```shell script
-./gradlew build -Dquarkus.native.enabled=true -Dquarkus.native.container-build=true
-```
+## Notas Adicionales
+- Asegúrate de que el puerto 3306 (por defecto) esté abierto y accesible para MySQL.
+- Verifica los logs de la aplicación para solucionar cualquier problema de configuración o conexión.
+- Si utilizas Docker, podrías considerar usar un contenedor Docker para MySQL para simplificar la gestión de la base de datos localmente.
 
-You can then execute your native executable with: `./build/gestionemp-0.1.0-runner`
+### Quarkus CLI
+Puedes obtener la herramienta de CLI de quarkus desde [Quarkus CLI](https://quarkus.io/guides/cli-tooling) con esta puedes tambien ejecutar el aplicativo
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/gradle-tooling>.
+   ```sh
+   quarkus dev
+   ```
 
-## Related Guides
+## Dudas y comentarios
 
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, Jakarta Persistence)
-- RESTEasy Classic JSON-B ([guide](https://quarkus.io/guides/rest-json)): JSON-B serialization support for RESTEasy Classic
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- RESTEasy Classic ([guide](https://quarkus.io/guides/resteasy)): REST endpoint framework implementing Jakarta REST and more
-- JDBC Driver - MySQL ([guide](https://quarkus.io/guides/datasource)): Connect to the MySQL database via JDBC
-
-## Provided Code
-
-### Hibernate ORM
-
-Create your first JPA entity
-
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
-
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
-
-
-### RESTEasy JAX-RS
-
-Easily start your RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started#the-jax-rs-resources)
+Cualquier duda o comentario pueden ser enviados a mi correo personal: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev) o a mi cuenta de GitHub: [alexlm78](https://www.github.com/alexlm78) y con gusto lo revisamos.
