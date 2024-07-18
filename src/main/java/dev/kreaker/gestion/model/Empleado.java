@@ -1,4 +1,4 @@
-package dev.kreaker.gestionEmp.model;
+package dev.kreaker.gestion.model;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
