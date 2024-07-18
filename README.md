@@ -57,7 +57,7 @@ FLUSH PRIVILEGES;
    ```groovy
    plugins {
        id 'java'
-       id 'io.quarkus' version '2.x.x' // Usar la versión correspondiente a tu proyecto
+       id 'io.quarkus'
    }
 
    repositories {
@@ -65,19 +65,35 @@ FLUSH PRIVILEGES;
    }
 
    dependencies {
+       implementation 'io.quarkiverse.jdbc:quarkus-jdbc-sqlite:3.0.7'
        implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-       implementation 'io.quarkus:quarkus-hibernate-orm'
-       implementation 'io.quarkus:quarkus-jdbc-mysql'
-       implementation 'io.quarkus:quarkus-resteasy'
+       implementation 'io.quarkus:quarkus-hibernate-validator'
        implementation 'io.quarkus:quarkus-resteasy-jsonb'
+       implementation 'io.quarkus:quarkus-hibernate-orm-panache'
+       implementation 'io.quarkus:quarkus-resteasy'
+       implementation 'io.quarkus:quarkus-jdbc-mysql'
+       implementation 'io.quarkus:quarkus-arc'
+       implementation 'io.quarkus:quarkus-hibernate-orm'
+    
+       testImplementation 'io.quarkus:quarkus-junit5'
+       testImplementation 'io.rest-assured:rest-assured'
    }
-
-   group 'com.example'
-   version '1.0.0-SNAPSHOT'
-
+   
+   group 'dev.kreaker'
+   version '0.1.0'
+   
    java {
-       sourceCompatibility = JavaVersion.VERSION_11
-       targetCompatibility = JavaVersion.VERSION_11
+       sourceCompatibility = JavaVersion.VERSION_21
+       targetCompatibility = JavaVersion.VERSION_21
+   }
+   
+   test {
+       systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+   }
+   
+   compileJava {
+       options.encoding = 'UTF-8'
+       options.compilerArgs << '-parameters'
    }
    ```
 
