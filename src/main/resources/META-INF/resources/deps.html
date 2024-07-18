@@ -9,6 +9,7 @@
 <div class="container mt-4">
    <h1>Departamentos</h1>
    <form id="department-form">
+      <input type="hidden" id="edit-mode" value="false">
       <div class="form-group">
          <label for="codigo">Código</label>
          <input type="text" class="form-control" id="codigo" required>
@@ -21,7 +22,8 @@
          <label for="descripcion">Descripción</label>
          <textarea class="form-control" id="descripcion"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary">Agregar</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Agregar</button>
+      <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancelar</button>
    </form>
    <table class="table mt-4">
       <thead>
@@ -37,26 +39,40 @@
    </table>
 </div>
 <script>
-   document.getElementById('department-form').addEventListener('submit', async function (e) {
+   const departmentForm = document.getElementById('department-form');
+   
+   departmentForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+      
+      const editMode = document.getElementById('edit-mode').value === 'true';
       const codigo = document.getElementById('codigo').value;
       const nombre = document.getElementById('nombre').value;
       const descripcion = document.getElementById('descripcion').value;
-      const response = await fetch('/departamentos', {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({codigo, nombre, descripcion})
-      });
-      if (response.status === 201) {
-         // Refrescar la lista de departamentos
-         cargarDepartamentos();
-         // Limpiar el formulario
-         document.getElementById('department-form').reset();
-      } else if (response.status === 409) {
-         alert('El código ya existe.');
+      
+      if (editMode) {
+         await fetch(`/departamentos/${codigo}`, {
+            method: 'PUT',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({codigo, nombre, descripcion})
+         });
+      } else {
+         const response = await fetch('/departamentos', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({codigo, nombre, descripcion})
+         });
+         if (response.status === 409) {
+            alert('El código ya existe.');
+         }
       }
+      
+      cargarDepartamentos();
+      departmentForm.reset();
+      toggleEditMode(false);
    });
    
    async function cargarDepartamentos() {
@@ -71,6 +87,7 @@
                 <td>${departamento.nombre}</td>
                 <td>${departamento.descripcion}</td>
                 <td>
+                    <button class="btn btn-warning" onclick="editarDepartamento('${departamento.codigo}', '${departamento.nombre}', '${departamento.descripcion}')">Editar</button>
                     <button class="btn btn-danger" onclick="borrarDepartamento('${departamento.codigo}')">Eliminar</button>
                 </td>
             `;
@@ -84,6 +101,36 @@
       });
       cargarDepartamentos();
    }
+   
+   function editarDepartamento(codigo, nombre, descripcion) {
+      document.getElementById('codigo').value = codigo;
+      document.getElementById('nombre').value = nombre;
+      document.getElementById('descripcion').value = descripcion;
+      
+      // Disable code field to prevent edits
+      document.getElementById('codigo').setAttribute('disabled', 'disabled');
+      
+      toggleEditMode(true);
+   }
+   
+   function toggleEditMode(enable) {
+      const isEditMode = enable === true;
+      document.getElementById('edit-mode').value = isEditMode;
+      
+      // Toggle buttons
+      document.getElementById('submit-btn').textContent = isEditMode ? 'Actualizar' : 'Agregar';
+      document.getElementById('cancel-btn').style.display = isEditMode ? 'inline-block' : 'none';
+      
+      // Reset form
+      if (!isEditMode) {
+         document.getElementById('codigo').removeAttribute('disabled');
+         departmentForm.reset();
+      }
+   }
+   
+   document.getElementById('cancel-btn').addEventListener('click', () => {
+      toggleEditMode(false);
+   });
    
    cargarDepartamentos();
 </script>

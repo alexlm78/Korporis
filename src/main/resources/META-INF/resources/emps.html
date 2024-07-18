@@ -9,6 +9,8 @@
 <div class="container mt-4">
    <h1>Empleados</h1>
    <form id="employee-form">
+      <input type="hidden" id="edit-mode" value="false">
+      <input type="hidden" id="employee-id">
       <div class="form-group">
          <label for="nombres">Nombres</label>
          <input type="text" class="form-control" id="nombres" required>
@@ -25,7 +27,8 @@
          <label for="departamento">Departamento</label>
          <select class="form-control" id="departamento" required></select>
       </div>
-      <button type="submit" class="btn btn-primary">Agregar</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Agregar</button>
+      <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancelar</button>
    </form>
    <table class="table mt-4">
       <thead>
@@ -43,25 +46,39 @@
    </table>
 </div>
 <script>
-   document.getElementById('employee-form').addEventListener('submit', async function (e) {
+   const employeeForm = document.getElementById('employee-form');
+   
+   employeeForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+      
+      const editMode = document.getElementById('edit-mode').value === 'true';
+      const id = document.getElementById('employee-id').value;
       const nombres = document.getElementById('nombres').value;
       const apellidos = document.getElementById('apellidos').value;
       const fechaNacimiento = document.getElementById('fechaNacimiento').value;
       const departamento_codigo = document.getElementById('departamento').value;
-      const response = await fetch('/empleados', {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({nombres, apellidos, fechaNacimiento, departamento: {codigo: departamento_codigo}})
-      });
-      if (response.status === 201) {
-         // Refrescar la lista de empleados
-         cargarEmpleados();
-         // Limpiar el formulario
-         document.getElementById('employee-form').reset();
+      
+      if (editMode) {
+         await fetch(`/empleados/${id}`, {
+            method: 'PUT',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({nombres, apellidos, fechaNacimiento, departamento: { codigo: departamento_codigo }})
+         });
+      } else {
+         await fetch('/empleados', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({nombres, apellidos, fechaNacimiento, departamento: { codigo: departamento_codigo }})
+         });
       }
+      
+      cargarEmpleados();
+      employeeForm.reset();
+      toggleEditMode(false);
    });
    
    async function cargarEmpleados() {
@@ -78,6 +95,7 @@
                 <td>${empleado.fechaNacimiento}</td>
                 <td>${empleado.departamento ? empleado.departamento.nombre : ''}</td>
                 <td>
+                    <button class="btn btn-warning" onclick="editarEmpleado(${empleado.id}, '${empleado.nombres}', '${empleado.apellidos}', '${empleado.fechaNacimiento}', '${empleado.departamento ? empleado.departamento.codigo : ''}')">Editar</button>
                     <button class="btn btn-danger" onclick="borrarEmpleado(${empleado.id})">Eliminar</button>
                 </td>
             `;
@@ -104,6 +122,35 @@
       });
       cargarEmpleados();
    }
+   
+   function editarEmpleado(id, nombres, apellidos, fechaNacimiento, departamentoCodigo) {
+      document.getElementById('employee-id').value = id;
+      document.getElementById('nombres').value = nombres;
+      document.getElementById('apellidos').value = apellidos;
+      document.getElementById('fechaNacimiento').value = fechaNacimiento;
+      document.getElementById('departamento').value = departamentoCodigo;
+      
+      toggleEditMode(true);
+   }
+   
+   function toggleEditMode(enable) {
+      const isEditMode = enable === true;
+      document.getElementById('edit-mode').value = isEditMode;
+      
+      // Toggle buttons
+      document.getElementById('submit-btn').textContent = isEditMode ? 'Actualizar' : 'Agregar';
+      document.getElementById('cancel-btn').style.display = isEditMode ? 'inline-block' : 'none';
+      
+      // Reset form
+      if (!isEditMode) {
+         employeeForm.reset();
+         document.getElementById('employee-id').value = '';
+      }
+   }
+   
+   document.getElementById('cancel-btn').addEventListener('click', () => {
+      toggleEditMode(false);
+   });
    
    cargarDepartamentosSelect();
    cargarEmpleados();
