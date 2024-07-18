@@ -22,7 +22,8 @@ public class EmpleadoResource {
    @Transactional
    public Response create(Empleado empleado){
       empleado.persist();
-      return Response.status(Response.Status.CREATED).build();
+      empleado.updateCodigo();
+      return Response.status(Response.Status.CREATED).entity(empleado).build();
    }
    
    @PUT

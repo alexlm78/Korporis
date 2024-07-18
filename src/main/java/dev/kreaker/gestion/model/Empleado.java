@@ -28,11 +28,11 @@ public class Empleado extends PanacheEntityBase {
    @ManyToOne
    public Departamento departamento;
    
-   @PrePersist
-   public void prePersist() {
-      if ( this.codigo == null ) {
-         long count = Empleado.count();
-         this.codigo = String.format("EMP-%04d", count + 1);
+   @PostPersist
+   public void updateCodigo() {
+      if(this.codigo == null) {
+         this.codigo = String.format("EMP-%04d", this.id);
+         Empleado.persist(this);
       }
    }
 }
