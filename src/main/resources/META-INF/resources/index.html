@@ -2,33 +2,40 @@
 <html lang="en">
 <head>
    <meta charset="UTF-8">
-   <title>Lista de Empleados</title>
+   <title>Gestión de Empleados</title>
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-<div class="container">
-   <h1>Empleados</h1>
-   <table class="table">
-      <thead>
-      <tr>
-         <th>Código</th>
-         <th>Nombres</th>
-         <th>Apellidos</th>
-         <th>Fecha de Nacimiento</th>
-         <th>Departamento</th>
-      </tr>
-      </thead>
-      <tbody>
-      <!-- Example row hardcoded for illustration -->
-      <tr>
-         <td>EMP-0001</td>
-         <td>Juan</td>
-         <td>Perez</td>
-         <td>1980-01-01</td>
-         <td>RRHH</td>
-      </tr>
-      </tbody>
-   </table>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+   <a class="navbar-brand" href="#">Gestión de Empleados</a>
+   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+   </button>
+   <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+         <li class="nav-item active">
+            <a class="nav-link" href="#">Inicio <span class="sr-only">(current)</span></a>
+         </li>
+         <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               Opciones
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+               <a class="dropdown-item" href="deps.html">Departamentos</a>
+               <a class="dropdown-item" href="emps.html">Empleados</a>
+            </div>
+         </li>
+      </ul>
+   </div>
+</nav>
+
+<div class="container mt-4">
+   <h1>Bienvenido a la Gestión de Empleados</h1>
+   <p>Utiliza el menú para navegar entre departamentos y empleados.</p>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
