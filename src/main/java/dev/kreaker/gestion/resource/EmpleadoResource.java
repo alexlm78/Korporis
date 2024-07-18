@@ -4,6 +4,7 @@ import dev.kreaker.gestion.model.Empleado;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -19,35 +20,32 @@ public class EmpleadoResource {
    
    @POST
    @Transactional
-   public void create(Empleado empleado){
+   public Response create(Empleado empleado){
       empleado.persist();
+      return Response.status(Response.Status.CREATED).build();
    }
    
    @PUT
    @Path("{id}")
    @Transactional
-   public void update(@PathParam("id") Long id, Empleado empleado){
+   public Response update(@PathParam("id") Long id, Empleado empleado){
       Empleado entity = Empleado.findById(id);
       if(entity == null)
-         throw new WebApplicationException("Empleado con el id " + id + " no existe.", 404);
+         return Response.status(Response.Status.NOT_FOUND).build();
       
       entity.nombres = empleado.nombres;
       entity.apellidos = empleado.apellidos;
       entity.fechaNacimiento = empleado.fechaNacimiento;
       entity.departamento = empleado.departamento;
       entity.persist();
+      return Response.ok().build();
    }
    
    @DELETE
    @Path("{id}")
    @Transactional
-   public void delete(@PathParam("id") Long id){
-      //Empleado.deleteById(id);
-      Empleado entity = Empleado.findById(id);
-      if(entity == null)
-         throw new WebApplicationException("Empleado con el id " + id + " no existe.", 404);
-      
-      entity.delete();
+   public Response delete(@PathParam("id") Long id){
+      Empleado.deleteById(id);
+      return Response.noContent().build();
    }
 }
-

@@ -4,6 +4,8 @@ import dev.kreaker.gestion.model.Departamento;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 import java.util.List;
 
 @Path("/departamentos")
@@ -18,32 +20,38 @@ public class DepartamentoResource {
    
    @POST
    @Transactional
-   public void create(Departamento departamento){
+   public Response create(Departamento departamento){
+      if(Departamento.findById(departamento.codigo) != null)
+         return Response.status(Response.Status.CONFLICT).entity("Departamento con el código " + departamento.codigo + " ya existe.").build();
+      
       departamento.persist();
+      return Response.status(Response.Status.CREATED).build();
    }
    
    @PUT
    @Path("{codigo}")
    @Transactional
-   public void update(@PathParam("codigo") String codigo, Departamento departamento){
+   public Response update(@PathParam("codigo") String codigo, Departamento departamento){
       Departamento entity = Departamento.findById(codigo);
       if(entity == null)
-         throw new WebApplicationException("Departamento con el código " + codigo + " no existe.", 404);
+         return Response.status(Response.Status.NOT_FOUND).build();
       
       entity.nombre = departamento.nombre;
       entity.descripcion = departamento.descripcion;
       entity.persist();
+      return Response.ok().build();
    }
    
    @DELETE
    @Path("{codigo}")
    @Transactional
-   public void delete(@PathParam("codigo") String codigo){
+   public Response delete(@PathParam("codigo") String codigo){
       //Departamento.deleteById(codigo);
       Departamento entity = Departamento.findById(codigo);
       if(entity == null)
-         throw new WebApplicationException("Departamento con el código " + codigo + " no existe.", 404);
+         return Response.status(Response.Status.NOT_FOUND).build();
       
       entity.delete();
+      return Response.noContent().build();
    }
 }

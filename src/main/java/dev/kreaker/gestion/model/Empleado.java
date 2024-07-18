@@ -3,6 +3,8 @@ package dev.kreaker.gestion.model;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Empleado extends PanacheEntityBase {
@@ -12,17 +14,21 @@ public class Empleado extends PanacheEntityBase {
    
    public String codigo;
    
-   @NotBlank
+   @NotBlank(message="Los nombres son requeridos")
+   @Size(max=100, message="Los nombres no pueden tener más de 100 caracteres")
    public String nombres;
    
-   @NotBlank
+   @NotBlank(message="Los apellidos son requeridos")
+   @Size(max=100, message="Los apellidos no pueden tener más de 100 caracteres")
    public String apellidos;
    
    public String fechaNacimiento;
    
+   @NotNull(message="El departamento es requerido")
    @ManyToOne
    public Departamento departamento;
    
+   @PrePersist
    public void prePersist() {
       if ( this.codigo == null ) {
          long count = Empleado.count();

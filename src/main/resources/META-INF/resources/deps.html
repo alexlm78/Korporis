@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Departamentos</title>
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+   <h1>Departamentos</h1>
+   <form id="department-form">
+      <div class="form-group">
+         <label for="codigo">Código</label>
+         <input type="text" class="form-control" id="codigo" required>
+      </div>
+      <div class="form-group">
+         <label for="nombre">Nombre</label>
+         <input type="text" class="form-control" id="nombre" required>
+      </div>
+      <div class="form-group">
+         <label for="descripcion">Descripción</label>
+         <textarea class="form-control" id="descripcion"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Agregar</button>
+   </form>
+   <table class="table mt-4">
+      <thead>
+      <tr>
+         <th>Código</th>
+         <th>Nombre</th>
+         <th>Descripción</th>
+         <th>Acciones</th>
+      </tr>
+      </thead>
+      <tbody id="department-tbody">
+      </tbody>
+   </table>
+</div>
+<script>
+   document.getElementById('department-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const codigo = document.getElementById('codigo').value;
+      const nombre = document.getElementById('nombre').value;
+      const descripcion = document.getElementById('descripcion').value;
+      const response = await fetch('/departamentos', {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({codigo, nombre, descripcion})
+      });
+      if (response.status === 201) {
+         // Refrescar la lista de departamentos
+         cargarDepartamentos();
+         // Limpiar el formulario
+         document.getElementById('department-form').reset();
+      } else if (response.status === 409) {
+         alert('El código ya existe.');
+      }
+   });
+   
+   async function cargarDepartamentos() {
+      const response = await fetch('/departamentos');
+      const departamentos = await response.json();
+      const tbody = document.getElementById('department-tbody');
+      tbody.innerHTML = '';
+      departamentos.forEach(departamento => {
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+                <td>${departamento.codigo}</td>
+                <td>${departamento.nombre}</td>
+                <td>${departamento.descripcion}</td>
+                <td>
+                    <button class="btn btn-danger" onclick="borrarDepartamento('${departamento.codigo}')">Eliminar</button>
+                </td>
+            `;
+         tbody.appendChild(tr);
+      });
+   }
+   
+   async function borrarDepartamento(codigo) {
+      await fetch(`/departamentos/${codigo}`, {
+         method: 'DELETE'
+      });
+      cargarDepartamentos();
+   }
+   
+   cargarDepartamentos();
+</script>
+</body>
+</html>
