@@ -1,136 +1,209 @@
-# Instalacion basica de GestionEmp
+# Korporis
 
-## Prerrequisitos
-Antes de empezar, asegúrate de tener instalados los siguientes componentes en tu máquina:
+[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
+[![Quarkus](https://img.shields.io/badge/Quarkus-3.12.2-blue.svg)](https://quarkus.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-1. **Java Development Kit (JDK) 11 o superior**.
-2. **Gradle**.
-3. **MySQL Server**.
+Korporis is a modern employee and department management system built with Quarkus. It provides a RESTful API backend with a responsive Bootstrap-based frontend for managing organizational structure, employees, and departments.
 
-## Pasos de Instalación
+## Features
 
-### 1. Instalar JDK
-Si no tienes el JDK instalado, puedes descargar e instalar el OpenJDK 11 o superior desde [AdoptOpenJDK](https://adoptopenjdk.net/).
+- **Department Management**: Create, update, and delete departments with custom codes and descriptions
+- **Employee Management**: Full CRUD operations for employee records with automatic employee code generation
+- **RESTful API**: JSON-based REST endpoints for easy integration
+- **Responsive UI**: Bootstrap-powered web interface for desktop and mobile devices
+- **Database Flexibility**: Support for MySQL (primary) and SQLite
+- **Active Record Pattern**: Simplified data access using Panache ORM
+- **Bean Validation**: Built-in validation for data integrity
 
-### 2. Instalar Gradle
-Puedes seguir las instrucciones de la documentación oficial para instalar Gradle: [Installing Gradle](https://gradle.org/install/).
+## Technology Stack
 
-### 3. Instalar y Configurar MySQL
-Descarga e instala MySQL Server desde [MySQL Downloads](https://dev.mysql.com/downloads/mysql/).
+- **Framework**: Quarkus 3.12.2
+- **Language**: Java 21
+- **Build Tool**: Gradle
+- **ORM**: Hibernate ORM with Panache
+- **Database**: MySQL 8.x (SQLite also supported)
+- **Frontend**: HTML5, Bootstrap 4.5.2, jQuery
+- **Testing**: JUnit 5, REST Assured
 
-Después de la instalación:
+## Prerequisites
 
-- Inicia el servicio de MySQL.
-- Abre `mysql` en tu terminal o usa MySQL Workbench para crear una base de datos llamada `gestion`.
+Before you begin, ensure you have the following installed:
+
+- **Java Development Kit (JDK)** 21 or higher
+- **Gradle** 7.x or higher (or use the included Gradle wrapper)
+- **MySQL Server** 8.0 or higher
+- **Git** (for cloning the repository)
+
+## Installation
+
+### 1. Clone the Repository
+
+```sh
+git clone https://github.com/alexlm78/Korporis.git
+cd Korporis
+```
+
+### 2. Configure MySQL Database
+
+Create the database and user for Korporis:
 
 ```sql
-CREATE DATABASE gestion;
-CREATE USER 'gestion'@'localhost' IDENTIFIED BY 'gestion';
-GRANT ALL PRIVILEGES ON gestion.* TO 'gestion'@'localhost';
+CREATE DATABASE korporis;
+CREATE USER 'korporis'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON korporis.* TO 'korporis'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-### 4. Preparar tu Proyecto Quarkus
+### 3. Configure Application Properties
 
-1. **Clona tu repositorio del proyecto o descárgalo en tu máquina local**.
+Create or update `src/main/resources/application.properties`:
 
-2. **Configura el archivo `application.properties`**.
-   Dentro del directorio `src/main/resources/`, asegúrate de tener un archivo `application.properties` con el siguiente contenido:
-   
-   ```properties
-   quarkus.devservices.enabled=false 
+```properties
+# Disable dev services
+quarkus.devservices.enabled=false
 
-   # Datasource for mysql 
-   quarkus.datasource.db-kind=mysql 
-   quarkus.datasource.username=gestion 
-   quarkus.datasource.password=gestion 
-   quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/gestion 
-   quarkus.hibernate-orm.database.generation=update 
-   quarkus.datasource.jdbc.driver=com.mysql.cj.jdbc.Driver
-   ```
-   
-   Modifica los datos de conexión si es necesario, dependiendo de tu configuración local.
+# MySQL Datasource Configuration
+quarkus.datasource.db-kind=mysql
+quarkus.datasource.username=korporis
+quarkus.datasource.password=your_password
+quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/korporis
+quarkus.datasource.jdbc.driver=com.mysql.cj.jdbc.Driver
 
-3. **Verifica el archivo `build.gradle`**.
-   Asegúrate de que tu archivo `build.gradle` tenga las dependencias necesarias para Quarkus y MySQL:
-   
-   ```groovy
-   plugins {
-       id 'java'
-       id 'io.quarkus'
-   }
+# Hibernate Configuration
+quarkus.hibernate-orm.database.generation=update
+```
 
-   repositories {
-       mavenCentral()
-   }
+**Note**: Replace `your_password` with the password you set during MySQL user creation.
 
-   dependencies {
-       implementation 'io.quarkiverse.jdbc:quarkus-jdbc-sqlite:3.0.7'
-       implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-       implementation 'io.quarkus:quarkus-hibernate-validator'
-       implementation 'io.quarkus:quarkus-resteasy-jsonb'
-       implementation 'io.quarkus:quarkus-hibernate-orm-panache'
-       implementation 'io.quarkus:quarkus-resteasy'
-       implementation 'io.quarkus:quarkus-jdbc-mysql'
-       implementation 'io.quarkus:quarkus-arc'
-       implementation 'io.quarkus:quarkus-hibernate-orm'
-    
-       testImplementation 'io.quarkus:quarkus-junit5'
-       testImplementation 'io.rest-assured:rest-assured'
-   }
-   
-   group 'dev.kreaker'
-   version '0.1.0'
-   
-   java {
-       sourceCompatibility = JavaVersion.VERSION_21
-       targetCompatibility = JavaVersion.VERSION_21
-   }
-   
-   test {
-       systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
-   }
-   
-   compileJava {
-       options.encoding = 'UTF-8'
-       options.compilerArgs << '-parameters'
-   }
-   ```
+### 4. Build the Application
 
-### 5. Construir y Ejecutar la Aplicación
+Using Gradle wrapper (recommended):
 
-1. **Construir la Aplicación**.
-   
-   Navega hasta la raíz de tu proyecto y ejecuta el siguiente comando para construir tu aplicación:
-   
-   ```sh
-   ./gradlew build
-   ```
+```sh
+./gradlew build
+```
 
-2. **Ejecutar la Aplicación en Modo Dev**.
-   
-   Para iniciar tu aplicación en modo desarrollo (dev mode) y así recargar automáticamente los cambios:
-   
-   ```sh
-   ./gradlew quarkusDev
-   ```
+Or if you have Gradle installed globally:
 
-## Verifica la Instalación
-- La aplicación debería estar ejecutándose localmente en `http://localhost:8080`.
-- Puedes verificar la conexión a través de la consola de Quarkus y asegurarte de que la aplicación se conecta correctamente a la base de datos MySQL.
+```sh
+gradle build
+```
 
-## Notas Adicionales
-- Asegúrate de que el puerto 3306 (por defecto) esté abierto y accesible para MySQL.
-- Verifica los logs de la aplicación para solucionar cualquier problema de configuración o conexión.
-- Si utilizas Docker, podrías considerar usar un contenedor Docker para MySQL para simplificar la gestión de la base de datos localmente.
+### 5. Run the Application
 
-### Quarkus CLI
-Puedes obtener la herramienta de CLI de quarkus desde [Quarkus CLI](https://quarkus.io/guides/cli-tooling) con esta puedes tambien ejecutar el aplicativo
+#### Development Mode (with hot reload):
 
-   ```sh
-   quarkus dev
-   ```
+```sh
+./gradlew quarkusDev
+```
 
-## Dudas y comentarios
+Or using Quarkus CLI (if installed):
 
-Cualquier duda o comentario pueden ser enviados a mi correo personal: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev) o a mi cuenta de GitHub: [alexlm78](https://www.github.com/alexlm78) y con gusto lo revisamos.
+```sh
+quarkus dev
+```
+
+#### Production Mode:
+
+```sh
+java -jar build/quarkus-app/quarkus-run.jar
+```
+
+The application will be available at `http://localhost:8080`.
+
+## API Endpoints
+
+### Departments
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/departamentos` | List all departments |
+| POST | `/departamentos` | Create a new department |
+| PUT | `/departamentos/{codigo}` | Update a department |
+| DELETE | `/departamentos/{codigo}` | Delete a department |
+
+### Employees
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/empleados` | List all employees |
+| POST | `/empleados` | Create a new employee |
+| PUT | `/empleados/{id}` | Update an employee |
+| DELETE | `/empleados/{id}` | Delete an employee |
+
+All endpoints accept and return JSON. Employee codes are automatically generated in the format `EMP-XXXX` upon creation.
+
+## Project Structure
+
+```
+dev.kreaker.korporis/
+├── model/              # JPA entities (Panache-based)
+│   ├── Departamento.java
+│   └── Empleado.java
+└── resource/           # JAX-RS REST endpoints
+    ├── DepartamentoResource.java
+    └── EmpleadoResource.java
+```
+
+## Testing
+
+Run all tests:
+
+```sh
+./gradlew test
+```
+
+Run a specific test:
+
+```sh
+./gradlew test --tests dev.kreaker.GreetingResourceTest
+```
+
+## Docker Support
+
+Build Docker image (JVM mode):
+
+```sh
+./gradlew build
+docker build -f src/main/docker/Dockerfile.jvm -t quarkus/korporis-jvm .
+docker run -i --rm -p 8080:8080 quarkus/korporis-jvm
+```
+
+Build Docker image (native mode):
+
+```sh
+./gradlew build -Dquarkus.native.enabled=true
+docker build -f src/main/docker/Dockerfile.native -t quarkus/korporis .
+docker run -i --rm -p 8080:8080 quarkus/korporis
+```
+
+## Future Enhancements
+
+Planned features include:
+- **Attendance Tracking System**: Daily attendance management with work center assignments
+- **Monthly Planning**: Employee scheduling across multiple work centers
+- **Reporting**: Advanced analytics and attendance reports
+- **Authentication & Authorization**: Role-based access control
+
+See [ANALISIS.md](ANALISIS.md) for detailed technical specifications.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+**Alejandro Lopez**
+- Email: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev)
+- GitHub: [@alexlm78](https://github.com/alexlm78)
+
+## Acknowledgments
+
+- Built with [Quarkus](https://quarkus.io/) - Supersonic Subatomic Java
+- UI powered by [Bootstrap](https://getbootstrap.com/)
+- Database access via [Hibernate ORM with Panache](https://quarkus.io/guides/hibernate-orm-panache)

@@ -1,6 +1,6 @@
-package dev.kreaker.gestion.resource;
+package dev.kreaker.korporis.resource;
 
-import dev.kreaker.gestion.model.Empleado;
+import dev.kreaker.korporis.model.Empleado;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -12,12 +12,12 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class EmpleadoResource {
-   
+
    @GET
    public List<Empleado> list(){
       return Empleado.listAll();
    }
-   
+
    @POST
    @Transactional
    public Response create(Empleado empleado){
@@ -25,7 +25,7 @@ public class EmpleadoResource {
       empleado.updateCodigo();
       return Response.status(Response.Status.CREATED).entity(empleado).build();
    }
-   
+
    @PUT
    @Path("{id}")
    @Transactional
@@ -33,7 +33,7 @@ public class EmpleadoResource {
       Empleado entity = Empleado.findById(id);
       if(entity == null)
          return Response.status(Response.Status.NOT_FOUND).build();
-      
+
       entity.nombres = empleado.nombres;
       entity.apellidos = empleado.apellidos;
       entity.fechaNacimiento = empleado.fechaNacimiento;
@@ -41,7 +41,7 @@ public class EmpleadoResource {
       entity.persist();
       return Response.ok().build();
    }
-   
+
    @DELETE
    @Path("{id}")
    @Transactional

@@ -10,11 +10,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native-micro -t quarkus/gestionemp .
+# docker build -f src/main/docker/Dockerfile.native-micro -t quarkus/korporis .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/gestionemp
+# docker run -i --rm -p 8080:8080 quarkus/korporis
 #
 ###
 FROM quay.io/quarkus/quarkus-micro-image:2.0
