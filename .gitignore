@@ -365,3 +365,11 @@ application.properties
 
 # Plugin directory
 /.quarkus/cli/plugins/
+
+# Kreaker specific files
+CLAUDE.md
+WARP.md
+.claude
+.kiro
+.trae
+doxs/
