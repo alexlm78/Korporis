@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Korporis - Employees</title>
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+   <a class="navbar-brand" href="index.html">Korporis</a>
+   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+   </button>
+   <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav">
+         <li class="nav-item">
+            <a class="nav-link" href="index.html">Home</a>
+         </li>
+         <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               Options
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+               <a class="dropdown-item" href="departments.html">Departments</a>
+               <a class="dropdown-item" href="employees.html">Employees</a>
+            </div>
+         </li>
+      </ul>
+   </div>
+</nav>
+
+<div class="container mt-4">
+   <h1>Employees</h1>
+   <form id="employee-form">
+      <input type="hidden" id="edit-mode" value="false">
+      <input type="hidden" id="employee-id">
+      <div class="form-group">
+         <label for="firstName">First Name</label>
+         <input type="text" class="form-control" id="firstName" required>
+      </div>
+      <div class="form-group">
+         <label for="lastName">Last Name</label>
+         <input type="text" class="form-control" id="lastName" required>
+      </div>
+      <div class="form-group">
+         <label for="birthDate">Birth Date</label>
+         <input type="date" class="form-control" id="birthDate">
+      </div>
+      <div class="form-group">
+         <label for="department">Department</label>
+         <select class="form-control" id="department" required></select>
+      </div>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Add</button>
+      <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancel</button>
+   </form>
+   <table class="table mt-4">
+      <thead>
+      <tr>
+         <th>Code</th>
+         <th>First Name</th>
+         <th>Last Name</th>
+         <th>Birth Date</th>
+         <th>Department</th>
+         <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody id="employee-tbody">
+      </tbody>
+   </table>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+   const employeeForm = document.getElementById('employee-form');
+
+   employeeForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const editMode = document.getElementById('edit-mode').value === 'true';
+      const id = document.getElementById('employee-id').value;
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const birthDate = document.getElementById('birthDate').value;
+      const departmentCode = document.getElementById('department').value;
+
+      if (editMode) {
+         await fetch(`/employees/${id}`, {
+            method: 'PUT',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({firstName, lastName, birthDate, department: { code: departmentCode }})
+         });
+      } else {
+         await fetch('/employees', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({firstName, lastName, birthDate, department: { code: departmentCode }})
+         });
+      }
+
+      loadEmployees();
+      employeeForm.reset();
+      toggleEditMode(false);
+   });
+
+   async function loadEmployees() {
+      const response = await fetch('/employees');
+      const employees = await response.json();
+      const tbody = document.getElementById('employee-tbody');
+      tbody.innerHTML = '';
+      employees.forEach(employee => {
+         const tr = document.createElement('tr');
+         tr.innerHTML = `
+                    <td>${employee.code}</td>
+                    <td>${employee.firstName}</td>
+                    <td>${employee.lastName}</td>
+                    <td>${employee.birthDate}</td>
+                    <td>${employee.department ? employee.department.name : ''}</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="editEmployee(${employee.id}, '${employee.firstName}', '${employee.lastName}', '${employee.birthDate}', '${employee.department ? employee.department.code : ''}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteEmployee(${employee.id})">Delete</button>
+                    </td>
+                `;
+         tbody.appendChild(tr);
+      });
+   }
+
+   async function loadDepartmentsSelect() {
+      const response = await fetch('/departments');
+      const departments = await response.json();
+      const select = document.getElementById('department');
+      select.innerHTML = '<option value="">Select a department</option>';
+      departments.forEach(department => {
+         const option = document.createElement('option');
+         option.value = department.code;
+         option.textContent = department.name;
+         select.appendChild(option);
+      });
+   }
+
+   async function deleteEmployee(id) {
+      await fetch(`/employees/${id}`, {
+         method: 'DELETE'
+      });
+      loadEmployees();
+   }
+
+   function editEmployee(id, firstName, lastName, birthDate, departmentCode) {
+      document.getElementById('employee-id').value = id;
+      document.getElementById('firstName').value = firstName;
+      document.getElementById('lastName').value = lastName;
+      document.getElementById('birthDate').value = birthDate;
+      document.getElementById('department').value = departmentCode;
+
+      toggleEditMode(true);
+   }
+
+   function toggleEditMode(enable) {
+      const isEditMode = enable === true;
+      document.getElementById('edit-mode').value = isEditMode;
+
+      // Toggle buttons
+      document.getElementById('submit-btn').textContent = isEditMode ? 'Update' : 'Add';
+      document.getElementById('cancel-btn').style.display = isEditMode ? 'inline-block' : 'none';
+
+      // Reset form
+      if (!isEditMode) {
+         employeeForm.reset();
+         document.getElementById('employee-id').value = '';
+      }
+   }
+
+   document.getElementById('cancel-btn').addEventListener('click', () => {
+      toggleEditMode(false);
+   });
+
+   loadDepartmentsSelect();
+   loadEmployees();
+</script>
+</body>
+</html>

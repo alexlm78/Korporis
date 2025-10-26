@@ -118,19 +118,19 @@ The application will be available at `http://localhost:8080`.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/departamentos` | List all departments |
-| POST | `/departamentos` | Create a new department |
-| PUT | `/departamentos/{codigo}` | Update a department |
-| DELETE | `/departamentos/{codigo}` | Delete a department |
+| GET | `/departments` | List all departments |
+| POST | `/departments` | Create a new department |
+| PUT | `/departments/{code}` | Update a department |
+| DELETE | `/departments/{code}` | Delete a department |
 
 ### Employees
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/empleados` | List all employees |
-| POST | `/empleados` | Create a new employee |
-| PUT | `/empleados/{id}` | Update an employee |
-| DELETE | `/empleados/{id}` | Delete an employee |
+| GET | `/employees` | List all employees |
+| POST | `/employees` | Create a new employee |
+| PUT | `/employees/{id}` | Update an employee |
+| DELETE | `/employees/{id}` | Delete an employee |
 
 All endpoints accept and return JSON. Employee codes are automatically generated in the format `EMP-XXXX` upon creation.
 
@@ -139,11 +139,11 @@ All endpoints accept and return JSON. Employee codes are automatically generated
 ```
 dev.kreaker.korporis/
 ├── model/              # JPA entities (Panache-based)
-│   ├── Departamento.java
-│   └── Empleado.java
+│   ├── Department.java
+│   └── Employee.java
 └── resource/           # JAX-RS REST endpoints
-    ├── DepartamentoResource.java
-    └── EmpleadoResource.java
+    ├── DepartmentResource.java
+    └── EmployeeResource.java
 ```
 
 ## Testing
@@ -186,7 +186,7 @@ Planned features include:
 - **Reporting**: Advanced analytics and attendance reports
 - **Authentication & Authorization**: Role-based access control
 
-See [ANALISIS.md](ANALISIS.md) for detailed technical specifications.
+See [ANALISIS.md](doxs/ANALISIS.md) for detailed technical specifications.
 
 ## Contributing
 

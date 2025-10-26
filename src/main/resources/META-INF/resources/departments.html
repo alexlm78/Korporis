@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
    <meta charset="UTF-8">
-   <title>Korporis - Departamentos</title>
+   <title>Korporis - Departments</title>
    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
@@ -14,15 +14,15 @@
    <div class="collapse navbar-collapse" id="navbarNavDropdown">
       <ul class="navbar-nav">
          <li class="nav-item">
-            <a class="nav-link" href="index.html">Inicio</a>
+            <a class="nav-link" href="index.html">Home</a>
          </li>
          <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-               Opciones
+               Options
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-               <a class="dropdown-item" href="deps.html">Departamentos</a>
-               <a class="dropdown-item" href="emps.html">Empleados</a>
+               <a class="dropdown-item" href="departments.html">Departments</a>
+               <a class="dropdown-item" href="employees.html">Employees</a>
             </div>
          </li>
       </ul>
@@ -30,31 +30,31 @@
 </nav>
 
 <div class="container mt-4">
-   <h1>Departamentos</h1>
+   <h1>Departments</h1>
    <form id="department-form">
       <input type="hidden" id="edit-mode" value="false">
       <div class="form-group">
-         <label for="codigo">Código</label>
-         <input type="text" class="form-control" id="codigo" required>
+         <label for="code">Code</label>
+         <input type="text" class="form-control" id="code" required>
       </div>
       <div class="form-group">
-         <label for="nombre">Nombre</label>
-         <input type="text" class="form-control" id="nombre" required>
+         <label for="name">Name</label>
+         <input type="text" class="form-control" id="name" required>
       </div>
       <div class="form-group">
-         <label for="descripcion">Descripción</label>
-         <textarea class="form-control" id="descripcion"></textarea>
+         <label for="description">Description</label>
+         <textarea class="form-control" id="description"></textarea>
       </div>
-      <button type="submit" class="btn btn-primary" id="submit-btn">Agregar</button>
-      <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn">Add</button>
+      <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancel</button>
    </form>
    <table class="table mt-4">
       <thead>
       <tr>
-         <th>Código</th>
-         <th>Nombre</th>
-         <th>Descripción</th>
-         <th>Acciones</th>
+         <th>Code</th>
+         <th>Name</th>
+         <th>Description</th>
+         <th>Actions</th>
       </tr>
       </thead>
       <tbody id="department-tbody">
@@ -66,99 +66,99 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
    const departmentForm = document.getElementById('department-form');
-   
+
    departmentForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      
+
       const editMode = document.getElementById('edit-mode').value === 'true';
-      const codigo = document.getElementById('codigo').value;
-      const nombre = document.getElementById('nombre').value;
-      const descripcion = document.getElementById('descripcion').value;
-      
+      const code = document.getElementById('code').value;
+      const name = document.getElementById('name').value;
+      const description = document.getElementById('description').value;
+
       if (editMode) {
-         await fetch(`/departamentos/${codigo}`, {
+         await fetch(`/departments/${code}`, {
             method: 'PUT',
             headers: {
                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({codigo, nombre, descripcion})
+            body: JSON.stringify({code, name, description})
          });
       } else {
-         const response = await fetch('/departamentos', {
+         const response = await fetch('/departments', {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({codigo, nombre, descripcion})
+            body: JSON.stringify({code, name, description})
          });
          if (response.status === 409) {
-            alert('El código ya existe.');
+            alert('Code already exists.');
          }
       }
-      
-      cargarDepartamentos();
+
+      loadDepartments();
       departmentForm.reset();
       toggleEditMode(false);
    });
-   
-   async function cargarDepartamentos() {
-      const response = await fetch('/departamentos');
-      const departamentos = await response.json();
+
+   async function loadDepartments() {
+      const response = await fetch('/departments');
+      const departments = await response.json();
       const tbody = document.getElementById('department-tbody');
       tbody.innerHTML = '';
-      departamentos.forEach(departamento => {
+      departments.forEach(department => {
          const tr = document.createElement('tr');
          tr.innerHTML = `
-                    <td>${departamento.codigo}</td>
-                    <td>${departamento.nombre}</td>
-                    <td>${departamento.descripcion}</td>
+                    <td>${department.code}</td>
+                    <td>${department.name}</td>
+                    <td>${department.description}</td>
                     <td>
-                        <button class="btn btn-warning" onclick="editarDepartamento('${departamento.codigo}', '${departamento.nombre}', '${departamento.descripcion}')">Editar</button>
-                        <button class="btn btn-danger" onclick="borrarDepartamento('${departamento.codigo}')">Eliminar</button>
+                        <button class="btn btn-warning" onclick="editDepartment('${department.code}', '${department.name}', '${department.description}')">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteDepartment('${department.code}')">Delete</button>
                     </td>
                 `;
          tbody.appendChild(tr);
       });
    }
-   
-   async function borrarDepartamento(codigo) {
-      await fetch(`/departamentos/${codigo}`, {
+
+   async function deleteDepartment(code) {
+      await fetch(`/departments/${code}`, {
          method: 'DELETE'
       });
-      cargarDepartamentos();
+      loadDepartments();
    }
-   
-   function editarDepartamento(codigo, nombre, descripcion) {
-      document.getElementById('codigo').value = codigo;
-      document.getElementById('nombre').value = nombre;
-      document.getElementById('descripcion').value = descripcion;
-      
+
+   function editDepartment(code, name, description) {
+      document.getElementById('code').value = code;
+      document.getElementById('name').value = name;
+      document.getElementById('description').value = description;
+
       // Disable code field to prevent edits
-      document.getElementById('codigo').setAttribute('disabled', 'disabled');
-      
+      document.getElementById('code').setAttribute('disabled', 'disabled');
+
       toggleEditMode(true);
    }
-   
+
    function toggleEditMode(enable) {
       const isEditMode = enable === true;
       document.getElementById('edit-mode').value = isEditMode;
-      
+
       // Toggle buttons
-      document.getElementById('submit-btn').textContent = isEditMode ? 'Actualizar' : 'Agregar';
+      document.getElementById('submit-btn').textContent = isEditMode ? 'Update' : 'Add';
       document.getElementById('cancel-btn').style.display = isEditMode ? 'inline-block' : 'none';
-      
+
       // Reset form
       if (!isEditMode) {
-         document.getElementById('codigo').removeAttribute('disabled');
+         document.getElementById('code').removeAttribute('disabled');
          departmentForm.reset();
       }
    }
-   
+
    document.getElementById('cancel-btn').addEventListener('click', () => {
       toggleEditMode(false);
    });
-   
-   cargarDepartamentos();
+
+   loadDepartments();
 </script>
 </body>
 </html>
