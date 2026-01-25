@@ -1,10 +1,10 @@
 # Korporis
 
-[![Java](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
-[![Quarkus](https://img.shields.io/badge/Quarkus-3.12.2-blue.svg)](https://quarkus.io/)
+[![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.java.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-green.svg)](https://spring.io/projects/spring-boot)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Korporis is a modern employee and department management system built with Quarkus. It provides a RESTful API backend with a responsive Bootstrap-based frontend for managing organizational structure, employees, and departments.
+Korporis is a modern employee and department management system built with Spring Boot. It provides a RESTful API backend with a responsive Bootstrap-based frontend for managing organizational structure, employees, and departments.
 
 ## Features
 
@@ -12,27 +12,27 @@ Korporis is a modern employee and department management system built with Quarku
 - **Employee Management**: Full CRUD operations for employee records with automatic employee code generation
 - **RESTful API**: JSON-based REST endpoints for easy integration
 - **Responsive UI**: Bootstrap-powered web interface for desktop and mobile devices
-- **Database Flexibility**: Support for MySQL (primary) and SQLite
-- **Active Record Pattern**: Simplified data access using Panache ORM
+- **Database Flexibility**: Support for MySQL (primary) and H2 for development
+- **Spring Data JPA**: Simplified data access using Spring Data repositories
 - **Bean Validation**: Built-in validation for data integrity
 
 ## Technology Stack
 
-- **Framework**: Quarkus 3.12.2
-- **Language**: Java 21
-- **Build Tool**: Gradle
-- **ORM**: Hibernate ORM with Panache
-- **Database**: MySQL 8.x (SQLite also supported)
+- **Framework**: Spring Boot 4.0.2
+- **Language**: Java 25
+- **Build Tool**: Gradle 8.x
+- **ORM**: Hibernate ORM with Spring Data JPA
+- **Database**: MySQL 8.x (H2 also supported for development)
 - **Frontend**: HTML5, Bootstrap 4.5.2, jQuery
-- **Testing**: JUnit 5, REST Assured
+- **Testing**: JUnit 5, Spring Boot Test
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- **Java Development Kit (JDK)** 21 or higher
-- **Gradle** 7.x or higher (or use the included Gradle wrapper)
-- **MySQL Server** 8.0 or higher
+- **Java Development Kit (JDK)** 25 or higher
+- **Gradle** 8.x or higher (or use the included Gradle wrapper)
+- **MySQL Server** 8.0 or higher (optional, H2 can be used for development)
 - **Git** (for cloning the repository)
 
 ## Installation
@@ -44,7 +44,7 @@ git clone https://github.com/alexlm78/Korporis.git
 cd Korporis
 ```
 
-### 2. Configure MySQL Database
+### 2. Configure MySQL Database (Optional)
 
 Create the database and user for Korporis:
 
@@ -59,19 +59,41 @@ FLUSH PRIVILEGES;
 
 Create or update `src/main/resources/application.properties`:
 
+#### For MySQL:
+
 ```properties
-# Disable dev services
-quarkus.devservices.enabled=false
+spring.application.name=korporis
 
 # MySQL Datasource Configuration
-quarkus.datasource.db-kind=mysql
-quarkus.datasource.username=korporis
-quarkus.datasource.password=your_password
-quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/korporis
-quarkus.datasource.jdbc.driver=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/korporis
+spring.datasource.username=korporis
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 
-# Hibernate Configuration
-quarkus.hibernate-orm.database.generation=update
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+```
+
+#### For H2 (Development):
+
+```properties
+spring.application.name=korporis
+
+# H2 Datasource Configuration
+spring.datasource.url=jdbc:h2:mem:korporis
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# H2 Console
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
 ```
 
 **Note**: Replace `your_password` with the password you set during MySQL user creation.
@@ -92,22 +114,16 @@ gradle build
 
 ### 5. Run the Application
 
-#### Development Mode (with hot reload):
+#### Development Mode:
 
 ```sh
-./gradlew quarkusDev
-```
-
-Or using Quarkus CLI (if installed):
-
-```sh
-quarkus dev
+./gradlew bootRun
 ```
 
 #### Production Mode:
 
 ```sh
-java -jar build/quarkus-app/quarkus-run.jar
+java -jar build/libs/korporis-0.0.1-SNAPSHOT.jar
 ```
 
 The application will be available at `http://localhost:8080`.
@@ -138,10 +154,13 @@ All endpoints accept and return JSON. Employee codes are automatically generated
 
 ```
 dev.kreaker.korporis/
-├── model/              # JPA entities (Panache-based)
+├── model/              # JPA entities
 │   ├── Department.java
 │   └── Employee.java
-└── resource/           # JAX-RS REST endpoints
+├── repository/         # Spring Data JPA repositories
+│   ├── DepartmentRepository.java
+│   └── EmployeeRepository.java
+└── resource/           # REST controllers (to be migrated to controller/)
     ├── DepartmentResource.java
     └── EmployeeResource.java
 ```
@@ -162,20 +181,16 @@ Run a specific test:
 
 ## Docker Support
 
-Build Docker image (JVM mode):
+Build Docker image:
 
 ```sh
-./gradlew build
-docker build -f src/main/docker/Dockerfile.jvm -t quarkus/korporis-jvm .
-docker run -i --rm -p 8080:8080 quarkus/korporis-jvm
+./gradlew bootBuildImage
 ```
 
-Build Docker image (native mode):
+Run the Docker image:
 
 ```sh
-./gradlew build -Dquarkus.native.enabled=true
-docker build -f src/main/docker/Dockerfile.native -t quarkus/korporis .
-docker run -i --rm -p 8080:8080 quarkus/korporis
+docker run -p 8080:8080 korporis:0.0.1-SNAPSHOT
 ```
 
 ## Future Enhancements
@@ -184,7 +199,7 @@ Planned features include:
 - **Attendance Tracking System**: Daily attendance management with work center assignments
 - **Monthly Planning**: Employee scheduling across multiple work centers
 - **Reporting**: Advanced analytics and attendance reports
-- **Authentication & Authorization**: Role-based access control
+- **Authentication & Authorization**: Role-based access control with Spring Security
 
 See [ANALISIS.md](doxs/ANALISIS.md) for detailed technical specifications.
 
@@ -204,6 +219,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- Built with [Quarkus](https://quarkus.io/) - Supersonic Subatomic Java
+- Built with [Spring Boot](https://spring.io/projects/spring-boot) - The Modern Java Framework
 - UI powered by [Bootstrap](https://getbootstrap.com/)
-- Database access via [Hibernate ORM with Panache](https://quarkus.io/guides/hibernate-orm-panache)
+- Database access via [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+**Alejandro Lopez**
+- Email: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev)
+- GitHub: [@alexlm78](https://github.com/alexlm78)
+
+## Acknowledgments
+
+- Built with [Spring Boot](https://spring.io/projects/spring-boot) - The Modern Java Framework
+- UI powered by [Bootstrap](https://getbootstrap.com/)
+- Database access via [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
+
