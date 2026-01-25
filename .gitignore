@@ -319,11 +319,6 @@ $RECYCLE.BIN/
 # Ignore Gradle GUI config
 gradle-app.setting
 
-gradle-wrapper.jar
-gradle-wrapper.properties
-gradlew
-gradlew.bat
-
 # Cache of project
 .gradletasknamecache
 
@@ -361,7 +356,7 @@ tags
 
 # Local environment
 .env
-application.properties
+application-*.properties
 
 # Plugin directory
 /.quarkus/cli/plugins/
