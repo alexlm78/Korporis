@@ -1,132 +1,55 @@
-# Korporis
+# Korporis - Employee & Department Management System
 
-[![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.java.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-green.svg)](https://spring.io/projects/spring-boot)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-Korporis is a modern employee and department management system built with Spring Boot. It provides a RESTful API backend with a responsive Bootstrap-based frontend for managing organizational structure, employees, and departments.
+A RESTful API for managing employees and departments built with Spring Boot 4.0.2 and Java 25.
 
 ## Features
 
-- **Department Management**: Create, update, and delete departments with custom codes and descriptions
-- **Employee Management**: Full CRUD operations for employee records with automatic employee code generation
-- **RESTful API**: JSON-based REST endpoints for easy integration
-- **Responsive UI**: Bootstrap-powered web interface for desktop and mobile devices
-- **Database Flexibility**: Support for MySQL (primary) and H2 for development
-- **Spring Data JPA**: Simplified data access using Spring Data repositories
-- **Bean Validation**: Built-in validation for data integrity
+- **Employee Management**: Full CRUD operations for employees with hierarchical supervisor structure
+- **Department Management**: Full CRUD operations for departments with manager assignment
+- **Auto-generated Employee Codes**: Employees receive unique codes (EMP-XXXX format)
+- **Validation**: Input validation using Jakarta Bean Validation
+- **Error Handling**: Global exception handling with meaningful error responses
+- **Profile-based Configuration**: Support for H2 (development) and MySQL (production)
 
 ## Technology Stack
 
-- **Framework**: Spring Boot 4.0.2
-- **Language**: Java 25
-- **Build Tool**: Gradle 8.x
-- **ORM**: Hibernate ORM with Spring Data JPA
-- **Database**: MySQL 8.x (H2 also supported for development)
-- **Frontend**: HTML5, Bootstrap 4.5.2, jQuery
-- **Testing**: JUnit 5, Spring Boot Test
+- **Java 25**
+- **Spring Boot 4.0.2**
+- **Spring Data JPA** with Hibernate ORM 7.2.1
+- **H2 Database** (development)
+- **MySQL 8.0+** (production)
+- **Lombok** for boilerplate reduction
+- **Gradle** build system
 
-## Prerequisites
+## Getting Started
 
-Before you begin, ensure you have the following installed:
+### Prerequisites
 
-- **Java Development Kit (JDK)** 25 or higher
-- **Gradle** 8.x or higher (or use the included Gradle wrapper)
-- **MySQL Server** 8.0 or higher (optional, H2 can be used for development)
-- **Git** (for cloning the repository)
+- Java 25 or higher
+- Gradle 8.x (or use the included wrapper)
+- MySQL 8.0+ (for production)
 
-## Installation
+### Running with H2 (Development)
 
-### 1. Clone the Repository
-
-```sh
-git clone https://github.com/alexlm78/Korporis.git
-cd Korporis
-```
-
-### 2. Configure MySQL Database (Optional)
-
-Create the database and user for Korporis:
-
-```sql
-CREATE DATABASE korporis;
-CREATE USER 'korporis'@'localhost' IDENTIFIED BY 'your_password';
-GRANT ALL PRIVILEGES ON korporis.* TO 'korporis'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-### 3. Configure Application Properties
-
-Create or update `src/main/resources/application.properties`:
-
-#### For MySQL:
-
-```properties
-spring.application.name=korporis
-
-# MySQL Datasource Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/korporis
-spring.datasource.username=korporis
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-# JPA/Hibernate Configuration
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
-```
-
-#### For H2 (Development):
-
-```properties
-spring.application.name=korporis
-
-# H2 Datasource Configuration
-spring.datasource.url=jdbc:h2:mem:korporis
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-
-# H2 Console
-spring.h2.console.enabled=true
-spring.h2.console.path=/h2-console
-
-# JPA/Hibernate Configuration
-spring.jpa.hibernate.ddl-auto=create-drop
-spring.jpa.show-sql=true
-```
-
-**Note**: Replace `your_password` with the password you set during MySQL user creation.
-
-### 4. Build the Application
-
-Using Gradle wrapper (recommended):
-
-```sh
-./gradlew build
-```
-
-Or if you have Gradle installed globally:
-
-```sh
-gradle build
-```
-
-### 5. Run the Application
-
-#### Development Mode:
-
-```sh
+```bash
 ./gradlew bootRun
 ```
 
-#### Production Mode:
+The application will start on `http://localhost:8080` with an in-memory H2 database and sample data.
 
-```sh
-java -jar build/libs/korporis-0.0.1-SNAPSHOT.jar
+### Running with MySQL (Production)
+
+1. Create a MySQL database:
+```sql
+CREATE DATABASE korporis CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-The application will be available at `http://localhost:8080`.
+2. Update `src/main/resources/application-mysql.properties` with your database credentials.
+
+3. Run with MySQL profile:
+```bash
+./gradlew bootRun -Dspring.profiles.active=mysql
+```
 
 ## API Endpoints
 
@@ -134,106 +57,203 @@ The application will be available at `http://localhost:8080`.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/departments` | List all departments |
-| POST | `/departments` | Create a new department |
-| PUT | `/departments/{code}` | Update a department |
-| DELETE | `/departments/{code}` | Delete a department |
+| GET | `/api/departments` | List all departments |
+| GET | `/api/departments/{id}` | Get department by ID |
+| GET | `/api/departments/code/{code}` | Get department by code |
+| GET | `/api/departments/active` | List active departments |
+| GET | `/api/departments/search?name={name}` | Search departments by name |
+| POST | `/api/departments` | Create new department |
+| PUT | `/api/departments/{id}` | Update department |
+| PUT | `/api/departments/{id}/manager/{employeeId}` | Assign manager |
+| DELETE | `/api/departments/{id}/manager` | Remove manager |
+| PUT | `/api/departments/{id}/activate` | Activate department |
+| PUT | `/api/departments/{id}/deactivate` | Deactivate department |
+| DELETE | `/api/departments/{id}` | Delete department |
 
 ### Employees
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/employees` | List all employees |
-| POST | `/employees` | Create a new employee |
-| PUT | `/employees/{id}` | Update an employee |
-| DELETE | `/employees/{id}` | Delete an employee |
+| GET | `/api/employees` | List all employees |
+| GET | `/api/employees/{id}` | Get employee by ID |
+| GET | `/api/employees/code/{code}` | Get employee by code |
+| GET | `/api/employees/dpi/{dpi}` | Get employee by DPI |
+| GET | `/api/employees/email/{email}` | Get employee by email |
+| GET | `/api/employees/department/{departmentId}` | List employees by department |
+| GET | `/api/employees/status/{status}` | List employees by status |
+| GET | `/api/employees/search?name={name}` | Search employees by name |
+| GET | `/api/employees/{id}/subordinates` | Get employee's subordinates |
+| POST | `/api/employees` | Create new employee |
+| PUT | `/api/employees/{id}` | Update employee |
+| PUT | `/api/employees/{id}/terminate` | Terminate employee |
+| DELETE | `/api/employees/{id}` | Delete employee |
 
-All endpoints accept and return JSON. Employee codes are automatically generated in the format `EMP-XXXX` upon creation.
+## Data Models
+
+### Employee
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Long | Auto-generated ID |
+| employeeCode | String | Auto-generated code (EMP-XXXX) |
+| firstName | String | First name (required, max 50) |
+| lastName | String | Last name (required, max 50) |
+| dpi | String | DPI number (required, 13 digits, unique) |
+| email | String | Email address (required, unique) |
+| phone | String | Phone number (max 20) |
+| address | String | Address (max 300) |
+| birthDate | LocalDate | Date of birth |
+| gender | Enum | MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY |
+| hireDate | LocalDate | Hire date (required) |
+| terminationDate | LocalDate | Termination date |
+| position | String | Job position (required, max 100) |
+| salary | BigDecimal | Salary (required, positive) |
+| contractType | Enum | FULL_TIME, PART_TIME, CONTRACTOR, INTERN, TEMPORARY, FREELANCE |
+| status | Enum | ACTIVE, INACTIVE, ON_LEAVE, TERMINATED, SUSPENDED, RETIRED |
+| departmentId | Long | Department reference |
+| supervisorId | Long | Supervisor reference (hierarchical) |
+
+### Department
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | Long | Auto-generated ID |
+| code | String | Department code (required, max 10, unique) |
+| name | String | Department name (required, max 100) |
+| description | String | Description (max 500) |
+| location | String | Location (max 200) |
+| active | Boolean | Active status |
+| managerId | Long | Manager (employee) reference |
+
+## Example Requests
+
+### Create Employee
+
+```bash
+curl -X POST http://localhost:8080/api/employees \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Juan",
+    "lastName": "Perez",
+    "dpi": "1234567890123",
+    "email": "juan.perez@company.com",
+    "phone": "5555-1234",
+    "address": "Zone 10, Guatemala City",
+    "birthDate": "1990-05-15",
+    "gender": "MALE",
+    "hireDate": "2024-01-15",
+    "position": "Software Developer",
+    "salary": 10000.00,
+    "contractType": "FULL_TIME",
+    "departmentId": 1,
+    "supervisorId": 2
+  }'
+```
+
+### Create Department
+
+```bash
+curl -X POST http://localhost:8080/api/departments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "MKT",
+    "name": "Marketing",
+    "description": "Marketing and advertising department",
+    "location": "Building A, Floor 2"
+  }'
+```
+
+### Update Employee
+
+```bash
+curl -X PUT http://localhost:8080/api/employees/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "position": "Senior Software Developer",
+    "salary": 15000.00
+  }'
+```
+
+### Terminate Employee
+
+```bash
+curl -X PUT http://localhost:8080/api/employees/1/terminate
+```
+
+## Error Responses
+
+The API returns structured error responses:
+
+```json
+{
+  "timestamp": "2024-01-25T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Employee not found with id: 999",
+  "path": "/api/employees/999"
+}
+```
+
+### Validation Errors
+
+```json
+{
+  "timestamp": "2024-01-25T10:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "path": "/api/employees",
+  "errors": {
+    "firstName": "First name is required",
+    "email": "Invalid email format"
+  }
+}
+```
 
 ## Project Structure
 
 ```
-dev.kreaker.korporis/
-├── model/              # JPA entities
-│   ├── Department.java
-│   └── Employee.java
-├── repository/         # Spring Data JPA repositories
-│   ├── DepartmentRepository.java
-│   └── EmployeeRepository.java
-└── resource/           # REST controllers (to be migrated to controller/)
-    ├── DepartmentResource.java
-    └── EmployeeResource.java
+src/main/java/dev/kreraker/korporis/
+├── KorporisApplication.java          # Main application class
+├── config/
+│   └── DataLoader.java               # Sample data loader (H2 profile)
+├── controller/
+│   ├── DepartmentController.java     # Department REST endpoints
+│   └── EmployeeController.java       # Employee REST endpoints
+├── dto/
+│   ├── CreateDepartmentRequest.java  # Department creation DTO
+│   ├── CreateEmployeeRequest.java    # Employee creation DTO
+│   ├── DepartmentDTO.java            # Department response DTO
+│   ├── EmployeeDTO.java              # Employee response DTO
+│   ├── UpdateDepartmentRequest.java  # Department update DTO
+│   └── UpdateEmployeeRequest.java    # Employee update DTO
+├── exception/
+│   ├── BusinessException.java        # Business logic exception
+│   ├── DuplicateResourceException.java # Duplicate resource exception
+│   ├── ErrorResponse.java            # Error response DTO
+│   ├── GlobalExceptionHandler.java   # Global exception handler
+│   ├── ResourceNotFoundException.java # Resource not found exception
+│   └── ValidationErrorResponse.java  # Validation error response DTO
+├── model/
+│   ├── ContractType.java             # Contract type enum
+│   ├── Department.java               # Department entity
+│   ├── Employee.java                 # Employee entity
+│   ├── EmployeeStatus.java           # Employee status enum
+│   └── Gender.java                   # Gender enum
+├── repository/
+│   ├── DepartmentRepository.java     # Department JPA repository
+│   └── EmployeeRepository.java       # Employee JPA repository
+└── service/
+    ├── DepartmentService.java        # Department business logic
+    └── EmployeeService.java          # Employee business logic
 ```
 
-## Testing
+## Configuration Files
 
-Run all tests:
-
-```sh
-./gradlew test
-```
-
-Run a specific test:
-
-```sh
-./gradlew test --tests dev.kreaker.GreetingResourceTest
-```
-
-## Docker Support
-
-Build Docker image:
-
-```sh
-./gradlew bootBuildImage
-```
-
-Run the Docker image:
-
-```sh
-docker run -p 8080:8080 korporis:0.0.1-SNAPSHOT
-```
-
-## Future Enhancements
-
-Planned features include:
-- **Attendance Tracking System**: Daily attendance management with work center assignments
-- **Monthly Planning**: Employee scheduling across multiple work centers
-- **Reporting**: Advanced analytics and attendance reports
-- **Authentication & Authorization**: Role-based access control with Spring Security
-
-See [ANALISIS.md](doxs/ANALISIS.md) for detailed technical specifications.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- `application.properties` - Main configuration
+- `application-h2.properties` - H2 database configuration
+- `application-mysql.properties` - MySQL database configuration
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-**Alejandro Lopez**
-- Email: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev)
-- GitHub: [@alexlm78](https://github.com/alexlm78)
-
-## Acknowledgments
-
-- Built with [Spring Boot](https://spring.io/projects/spring-boot) - The Modern Java Framework
-- UI powered by [Bootstrap](https://getbootstrap.com/)
-- Database access via [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-**Alejandro Lopez**
-- Email: [alejandro@kreaker.dev](mailto:alejandro@kreaker.dev)
-- GitHub: [@alexlm78](https://github.com/alexlm78)
-
-## Acknowledgments
-
-- Built with [Spring Boot](https://spring.io/projects/spring-boot) - The Modern Java Framework
-- UI powered by [Bootstrap](https://getbootstrap.com/)
-- Database access via [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-
