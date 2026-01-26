@@ -9,15 +9,14 @@ A RESTful API for managing employees and departments built with Spring Boot 4.0.
 - **Auto-generated Employee Codes**: Employees receive unique codes (EMP-XXXX format)
 - **Validation**: Input validation using Jakarta Bean Validation
 - **Error Handling**: Global exception handling with meaningful error responses
-- **Profile-based Configuration**: Support for H2 (development) and MySQL (production)
+- **MySQL Database**: Production-ready MySQL 8.4 database with Docker Compose support
 
 ## Technology Stack
 
 - **Java 25**
 - **Spring Boot 4.0.2**
 - **Spring Data JPA** with Hibernate ORM 7.2.1
-- **H2 Database** (development)
-- **MySQL 8.0+** (production)
+- **MySQL 8.4** via Docker Compose
 - **Lombok** for boilerplate reduction
 - **Gradle** build system
 
@@ -27,29 +26,27 @@ A RESTful API for managing employees and departments built with Spring Boot 4.0.
 
 - Java 25 or higher
 - Gradle 8.x (or use the included wrapper)
-- MySQL 8.0+ (for production)
+- Docker and Docker Compose (for MySQL database)
 
-### Running with H2 (Development)
+### Running with Docker Compose
 
+1. Start the MySQL database:
+```bash
+docker compose up -d
+```
+
+2. Run the application:
 ```bash
 ./gradlew bootRun
 ```
 
-The application will start on `http://localhost:8080` with an in-memory H2 database and sample data.
+The application will start on `http://localhost:8080` connected to the MySQL database.
 
-### Running with MySQL (Production)
+### Database Initialization
 
-1. Create a MySQL database:
-```sql
-CREATE DATABASE korporis CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-2. Update `src/main/resources/application-mysql.properties` with your database credentials.
-
-3. Run with MySQL profile:
-```bash
-./gradlew bootRun -Dspring.profiles.active=mysql
-```
+When starting the MySQL container for the first time, the database will be initialized with:
+- Schema creation (`database/init/01-schema.sql`)
+- Sample data (`database/init/02-data.sql`)
 
 ## API Endpoints
 
@@ -215,8 +212,6 @@ The API returns structured error responses:
 ```
 src/main/java/dev/kreraker/korporis/
 ├── KorporisApplication.java          # Main application class
-├── config/
-│   └── DataLoader.java               # Sample data loader (H2 profile)
 ├── controller/
 │   ├── DepartmentController.java     # Department REST endpoints
 │   └── EmployeeController.java       # Employee REST endpoints
@@ -246,13 +241,16 @@ src/main/java/dev/kreraker/korporis/
 └── service/
     ├── DepartmentService.java        # Department business logic
     └── EmployeeService.java          # Employee business logic
+
+database/init/
+├── 01-schema.sql                     # Database schema
+└── 02-data.sql                       # Sample data
 ```
 
 ## Configuration Files
 
-- `application.properties` - Main configuration
-- `application-h2.properties` - H2 database configuration
-- `application-mysql.properties` - MySQL database configuration
+- `application.properties` - Main configuration with MySQL settings
+- `compose.yaml` - Docker Compose configuration for MySQL
 
 ## License
 

@@ -9,136 +9,21 @@ services:
     environment:
       MYSQL_DATABASE: korporis
       MYSQL_ROOT_PASSWORD: K0rp0r15#123
-      MYSQL_USER: korpo
+      MYSQL_USER: korporis
       MYSQL_PASSWORD: k0rp0r15
     volumes:
-      - kauth-volT0:/var/lib/mysql
+      - korporis-volT0:/var/lib/mysql
       - ./database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - kreaker-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pL0Cur1t45#0_0"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pK0rp0r15#123"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # Redis for caching and rate limiting
-  kauthRedis:
-    image: redis:7-alpine
-    container_name: kauthRedis
-    ports:
-      - "6379:6379"
-    command: redis-server --requirepass Id10t3c3s00 --appendonly yes
-    volumes:
-      - kauth-redis-vol:/data
-    networks:
-      - kreaker-net
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  #  # KAuth Application
-  #  kauth:
-  #    build:
-  #      context: .
-  #      dockerfile: Dockerfile
-  #    container_name: kauth-app
-  #    environment:
-  #      SPRING_PROFILES_ACTIVE: dev
-  #      DB_URL: jdbc:mysql://mysql:3306/kauth?useSSL=false&serverTimezone=UTC
-  #      DB_USERNAME: kauth_user
-  #      DB_PASSWORD: kauth_password
-  #      REDIS_HOST: redis
-  #      REDIS_PORT: 6379
-  #      REDIS_PASSWORD: redis_password
-  #      JWT_SECRET: your-256-bit-secret-key-change-this-in-production
-  #      ORG_RATE_LIMIT_ENABLED: false
-  #    ports:
-  #      - "8080:8080"
-  #    depends_on:
-  #      kauthDB:
-  #        condition: service_healthy
-  #      kauthRedis:
-  #        condition: service_healthy
-  #    networks:
-  #      - kreaker-net
-  #    restart: unless-stopped
-
-  # Grafana for monitoring dashboards
-  grafana:
-    image: grafana/grafana:latest
-    container_name: kauth-grafana
-    environment:
-      # Admin credentials
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
-
-      # Server settings
-      GF_SERVER_ROOT_URL: http://localhost:3000
-      GF_SERVER_SERVE_FROM_SUB_PATH: false
-
-      # Install JSON API datasource plugin
-      GF_INSTALL_PLUGINS: fifemon-graphql-datasource,simpod-json-datasource
-
-      # Anonymous access (optional - for demo purposes)
-      GF_AUTH_ANONYMOUS_ENABLED: false
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
-
-      # Disable Grafana's usage analytics
-      GF_ANALYTICS_REPORTING_ENABLED: false
-      GF_ANALYTICS_CHECK_FOR_UPDATES: false
-    ports:
-      - "3000:3000"
-    volumes:
-      # Provisioning configuration
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-
-      # Dashboards
-      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-
-      # Persistent data
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - kauth
-    networks:
-      - kreaker-net
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Prometheus (optional - for advanced metrics)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: kauth-prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    depends_on:
-      - kauth
-    networks:
-      - kreaker-net
-    restart: unless-stopped
-    profiles:
-      - monitoring  # Only start when explicitly requested
 
 volumes:
-  kauth-volT0:
-  kauth-redis-vol:
-  grafana-data:
-  prometheus-data:
+  korporis-volT0:
 
 networks:
   kreaker-net:
