@@ -4,151 +4,103 @@ import dev.kreraker.korporis.dto.CreateEmployeeRequest;
 import dev.kreraker.korporis.dto.EmployeeDTO;
 import dev.kreraker.korporis.dto.UpdateEmployeeRequest;
 import dev.kreraker.korporis.service.EmployeeService;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
-/**
- * REST controller for managing employees.
- */
-@RestController
-@RequestMapping("/api/employees")
-@RequiredArgsConstructor
-@Slf4j
+@Path("/api/employees")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class EmployeeController {
 
-    private final EmployeeService employeeService;
+    private static final Logger LOG = Logger.getLogger(EmployeeController.class);
 
-    /**
-     * GET /api/employees : Get all employees.
-     * @param activeOnly if true, returns only active employees
-     * @return list of employees
-     */
-    @GetMapping
-    public ResponseEntity<List<EmployeeDTO>> getAllEmployees(
-            @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
-        log.debug("REST request to get all employees, activeOnly: {}", activeOnly);
-        List<EmployeeDTO> employees = activeOnly 
-                ? employeeService.findAllActive() 
-                : employeeService.findAll();
-        return ResponseEntity.ok(employees);
+    @Inject
+    EmployeeService employeeService;
+
+    @GET
+    public List<EmployeeDTO> getAllEmployees(
+            @QueryParam("activeOnly") @DefaultValue("false") boolean activeOnly) {
+        LOG.debugf("REST request to get all employees, activeOnly: %s", activeOnly);
+        return activeOnly ? employeeService.findAllActive() : employeeService.findAll();
     }
 
-    /**
-     * GET /api/employees/:id : Get employee by ID.
-     * @param id the employee ID
-     * @return the employee
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
-        log.debug("REST request to get employee by id: {}", id);
-        EmployeeDTO employee = employeeService.findById(id);
-        return ResponseEntity.ok(employee);
+    @GET
+    @Path("/{id}")
+    public EmployeeDTO getEmployeeById(@PathParam("id") Long id) {
+        LOG.debugf("REST request to get employee by id: %d", id);
+        return employeeService.findById(id);
     }
 
-    /**
-     * GET /api/employees/code/:code : Get employee by employee code.
-     * @param code the employee code
-     * @return the employee
-     */
-    @GetMapping("/code/{code}")
-    public ResponseEntity<EmployeeDTO> getEmployeeByCode(@PathVariable String code) {
-        log.debug("REST request to get employee by code: {}", code);
-        EmployeeDTO employee = employeeService.findByEmployeeCode(code);
-        return ResponseEntity.ok(employee);
+    @GET
+    @Path("/code/{code}")
+    public EmployeeDTO getEmployeeByCode(@PathParam("code") String code) {
+        LOG.debugf("REST request to get employee by code: %s", code);
+        return employeeService.findByEmployeeCode(code);
     }
 
-    /**
-     * POST /api/employees : Create a new employee.
-     * @param request the create request
-     * @return the created employee
-     */
-    @PostMapping
-    public ResponseEntity<EmployeeDTO> createEmployee(
-            @Valid @RequestBody CreateEmployeeRequest request) {
-        log.debug("REST request to create employee: {} {}", request.getFirstName(), request.getLastName());
+    @POST
+    public Response createEmployee(@Valid CreateEmployeeRequest request) {
+        LOG.debugf("REST request to create employee: %s %s", request.firstName, request.lastName);
         EmployeeDTO created = employeeService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
-    /**
-     * PUT /api/employees/:id : Update an existing employee.
-     * @param id the employee ID
-     * @param request the update request
-     * @return the updated employee
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<EmployeeDTO> updateEmployee(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateEmployeeRequest request) {
-        log.debug("REST request to update employee: {}", id);
-        EmployeeDTO updated = employeeService.update(id, request);
-        return ResponseEntity.ok(updated);
+    @PUT
+    @Path("/{id}")
+    public EmployeeDTO updateEmployee(@PathParam("id") Long id, @Valid UpdateEmployeeRequest request) {
+        LOG.debugf("REST request to update employee: %d", id);
+        return employeeService.update(id, request);
     }
 
-    /**
-     * DELETE /api/employees/:id : Delete an employee.
-     * @param id the employee ID
-     * @return no content
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        log.debug("REST request to delete employee: {}", id);
+    @DELETE
+    @Path("/{id}")
+    public Response deleteEmployee(@PathParam("id") Long id) {
+        LOG.debugf("REST request to delete employee: %d", id);
         employeeService.delete(id);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    /**
-     * PATCH /api/employees/:id/terminate : Terminate an employee.
-     * @param id the employee ID
-     * @return the terminated employee
-     */
-    @PatchMapping("/{id}/terminate")
-    public ResponseEntity<EmployeeDTO> terminateEmployee(@PathVariable Long id) {
-        log.debug("REST request to terminate employee: {}", id);
-        EmployeeDTO terminated = employeeService.terminate(id);
-        return ResponseEntity.ok(terminated);
+    @PATCH
+    @Path("/{id}/terminate")
+    public EmployeeDTO terminateEmployee(@PathParam("id") Long id) {
+        LOG.debugf("REST request to terminate employee: %d", id);
+        return employeeService.terminate(id);
     }
 
-    /**
-     * GET /api/employees/department/:departmentId : Get employees by department.
-     * @param departmentId the department ID
-     * @return list of employees in the department
-     */
-    @GetMapping("/department/{departmentId}")
-    public ResponseEntity<List<EmployeeDTO>> getEmployeesByDepartment(
-            @PathVariable Long departmentId) {
-        log.debug("REST request to get employees by department: {}", departmentId);
-        List<EmployeeDTO> employees = employeeService.findByDepartment(departmentId);
-        return ResponseEntity.ok(employees);
+    @GET
+    @Path("/department/{departmentId}")
+    public List<EmployeeDTO> getEmployeesByDepartment(@PathParam("departmentId") Long departmentId) {
+        LOG.debugf("REST request to get employees by department: %d", departmentId);
+        return employeeService.findByDepartment(departmentId);
     }
 
-    /**
-     * GET /api/employees/:id/subordinates : Get subordinates of an employee.
-     * @param id the supervisor's employee ID
-     * @return list of subordinates
-     */
-    @GetMapping("/{id}/subordinates")
-    public ResponseEntity<List<EmployeeDTO>> getSubordinates(@PathVariable Long id) {
-        log.debug("REST request to get subordinates of employee: {}", id);
-        List<EmployeeDTO> subordinates = employeeService.findSubordinates(id);
-        return ResponseEntity.ok(subordinates);
+    @GET
+    @Path("/{id}/subordinates")
+    public List<EmployeeDTO> getSubordinates(@PathParam("id") Long id) {
+        LOG.debugf("REST request to get subordinates of employee: %d", id);
+        return employeeService.findSubordinates(id);
     }
 
-    /**
-     * GET /api/employees/search : Search employees by name.
-     * @param name the search term
-     * @return list of matching employees
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<EmployeeDTO>> searchEmployees(@RequestParam String name) {
-        log.debug("REST request to search employees by name: {}", name);
-        List<EmployeeDTO> employees = employeeService.searchByName(name);
-        return ResponseEntity.ok(employees);
+    @GET
+    @Path("/search")
+    public List<EmployeeDTO> searchEmployees(@QueryParam("name") String name) {
+        LOG.debugf("REST request to search employees by name: %s", name);
+        return employeeService.searchByName(name);
     }
 }

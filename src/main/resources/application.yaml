@@ -1,0 +1,31 @@
+quarkus:
+  application:
+    name: korporis
+
+  # Disable dev services (requires local/container DB)
+  devservices:
+    enabled: false
+
+  # MySQL Datasource
+  datasource:
+    db-kind: mysql
+    username: ${MYSQL_USERNAME:korporis}
+    password: ${MYSQL_PASSWORD:k0rp0r15}
+    jdbc:
+      url: ${MYSQL_URL:jdbc:mysql://localhost:3306/korporis?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+      max-size: 10
+      min-size: 5
+      idle-removal-interval: PT5M
+      acquisition-timeout: 20S
+
+  # Hibernate ORM
+  hibernate-orm:
+    schema-management:
+      strategy: update
+    log:
+      sql: true
+      format-sql: true
+
+  # HTTP Server
+  http:
+    port: 9087

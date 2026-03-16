@@ -1,125 +1,118 @@
 package dev.kreraker.korporis.exception;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global exception handler for REST controllers.
- */
-@RestControllerAdvice
-@Slf4j
+@Provider
 public class GlobalExceptionHandler {
 
-    /**
-     * Handles ResourceNotFoundException.
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-            ResourceNotFoundException ex, WebRequest request) {
-        log.error("Resource not found: {}", ex.getMessage());
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .error("Not Found")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    private static final Logger LOG = Logger.getLogger(GlobalExceptionHandler.class);
+
+    @Context
+    UriInfo uriInfo;
+
+    @Provider
+    public static class ResourceNotFoundMapper implements ExceptionMapper<ResourceNotFoundException> {
+
+        @Context
+        UriInfo uriInfo;
+
+        @Override
+        public Response toResponse(ResourceNotFoundException ex) {
+            LOG.errorf("Resource not found: %s", ex.getMessage());
+
+            ErrorResponse error = new ErrorResponse();
+            error.timestamp = LocalDateTime.now();
+            error.status = 404;
+            error.error = "Not Found";
+            error.message = ex.getMessage();
+            error.path = uriInfo.getPath();
+
+            return Response.status(Response.Status.NOT_FOUND).entity(error).build();
+        }
     }
 
-    /**
-     * Handles DuplicateResourceException.
-     */
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
-            DuplicateResourceException ex, WebRequest request) {
-        log.error("Duplicate resource: {}", ex.getMessage());
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error("Conflict")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    @Provider
+    public static class DuplicateResourceMapper implements ExceptionMapper<DuplicateResourceException> {
+
+        @Context
+        UriInfo uriInfo;
+
+        @Override
+        public Response toResponse(DuplicateResourceException ex) {
+            LOG.errorf("Duplicate resource: %s", ex.getMessage());
+
+            ErrorResponse error = new ErrorResponse();
+            error.timestamp = LocalDateTime.now();
+            error.status = 409;
+            error.error = "Conflict";
+            error.message = ex.getMessage();
+            error.path = uriInfo.getPath();
+
+            return Response.status(Response.Status.CONFLICT).entity(error).build();
+        }
     }
 
-    /**
-     * Handles BusinessException.
-     */
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex, WebRequest request) {
-        log.error("Business error: {}", ex.getMessage());
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Bad Request")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    @Provider
+    public static class BusinessExceptionMapper implements ExceptionMapper<BusinessException> {
+
+        @Context
+        UriInfo uriInfo;
+
+        @Override
+        public Response toResponse(BusinessException ex) {
+            LOG.errorf("Business error: %s", ex.getMessage());
+
+            ErrorResponse error = new ErrorResponse();
+            error.timestamp = LocalDateTime.now();
+            error.status = 400;
+            error.error = "Bad Request";
+            error.message = ex.getMessage();
+            error.path = uriInfo.getPath();
+
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+        }
     }
 
-    /**
-     * Handles validation errors.
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ValidationErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex, WebRequest request) {
-        log.error("Validation error: {}", ex.getMessage());
-        
-        Map<String, String> fieldErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            fieldErrors.put(fieldName, errorMessage);
-        });
-        
-        ValidationErrorResponse error = ValidationErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Failed")
-                .message("One or more fields have validation errors")
-                .path(request.getDescription(false).replace("uri=", ""))
-                .fieldErrors(fieldErrors)
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-    }
+    @Provider
+    public static class ConstraintViolationMapper implements ExceptionMapper<ConstraintViolationException> {
 
-    /**
-     * Handles all other exceptions.
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
-        log.error("Unexpected error: ", ex);
-        
-        ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message("An unexpected error occurred")
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-        
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        @Context
+        UriInfo uriInfo;
+
+        @Override
+        public Response toResponse(ConstraintViolationException ex) {
+            LOG.errorf("Validation error: %s", ex.getMessage());
+
+            Map<String, String> fieldErrors = new HashMap<>();
+            for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+                String field = violation.getPropertyPath().toString();
+                // Extract the field name from the full path (e.g., "create.arg0.firstName" -> "firstName")
+                if (field.contains(".")) {
+                    field = field.substring(field.lastIndexOf('.') + 1);
+                }
+                fieldErrors.put(field, violation.getMessage());
+            }
+
+            ValidationErrorResponse error = new ValidationErrorResponse();
+            error.timestamp = LocalDateTime.now();
+            error.status = 400;
+            error.error = "Validation Failed";
+            error.message = "One or more fields have validation errors";
+            error.path = uriInfo.getPath();
+            error.fieldErrors = fieldErrors;
+
+            return Response.status(Response.Status.BAD_REQUEST).entity(error).build();
+        }
     }
 }

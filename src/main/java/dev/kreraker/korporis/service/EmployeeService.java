@@ -11,292 +11,219 @@ import dev.kreraker.korporis.model.Employee;
 import dev.kreraker.korporis.model.EmployeeStatus;
 import dev.kreraker.korporis.repository.DepartmentRepository;
 import dev.kreraker.korporis.repository.EmployeeRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service class for managing employees.
- */
-@Service
-@RequiredArgsConstructor
-@Slf4j
-@Transactional(readOnly = true)
+@ApplicationScoped
 public class EmployeeService {
 
-    private final EmployeeRepository employeeRepository;
-    private final DepartmentRepository departmentRepository;
+    private static final Logger LOG = Logger.getLogger(EmployeeService.class);
 
-    /**
-     * Retrieves all employees.
-     * @return list of all employees
-     */
+    @Inject
+    EmployeeRepository employeeRepository;
+
+    @Inject
+    DepartmentRepository departmentRepository;
+
     public List<EmployeeDTO> findAll() {
-        log.debug("Finding all employees");
+        LOG.debug("Finding all employees");
         return employeeRepository.findAllWithDepartment().stream()
                 .map(EmployeeDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves all active employees.
-     * @return list of active employees
-     */
     public List<EmployeeDTO> findAllActive() {
-        log.debug("Finding all active employees");
+        LOG.debug("Finding all active employees");
         return employeeRepository.findAllActive().stream()
                 .map(EmployeeDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves an employee by ID.
-     * @param id the employee ID
-     * @return the employee DTO
-     * @throws ResourceNotFoundException if employee not found
-     */
     public EmployeeDTO findById(Long id) {
-        log.debug("Finding employee by id: {}", id);
+        LOG.debugf("Finding employee by id: %d", id);
         Employee employee = employeeRepository.findByIdWithRelationships(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
         return EmployeeDTO.fromEntity(employee);
     }
 
-    /**
-     * Retrieves an employee by employee code.
-     * @param employeeCode the employee code
-     * @return the employee DTO
-     * @throws ResourceNotFoundException if employee not found
-     */
     public EmployeeDTO findByEmployeeCode(String employeeCode) {
-        log.debug("Finding employee by code: {}", employeeCode);
+        LOG.debugf("Finding employee by code: %s", employeeCode);
         Employee employee = employeeRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "employeeCode", employeeCode));
         return EmployeeDTO.fromEntity(employee);
     }
 
-    /**
-     * Creates a new employee.
-     * @param request the create request
-     * @return the created employee DTO
-     * @throws DuplicateResourceException if DPI or email already exists
-     */
     @Transactional
     public EmployeeDTO create(CreateEmployeeRequest request) {
-        log.debug("Creating employee with DPI: {}", request.getDpi());
+        LOG.debugf("Creating employee with DPI: %s", request.dpi);
 
-        // Check for duplicate DPI
-        if (employeeRepository.existsByDpi(request.getDpi())) {
-            throw new DuplicateResourceException("Employee", "DPI", request.getDpi());
+        if (employeeRepository.existsByDpi(request.dpi)) {
+            throw new DuplicateResourceException("Employee", "DPI", request.dpi);
+        }
+        if (employeeRepository.existsByEmail(request.email)) {
+            throw new DuplicateResourceException("Employee", "email", request.email);
         }
 
-        // Check for duplicate email
-        if (employeeRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Employee", "email", request.getEmail());
-        }
-
-        // Generate employee code
         String employeeCode = generateEmployeeCode();
 
-        Employee employee = Employee.builder()
-                .employeeCode(employeeCode)
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .dpi(request.getDpi())
-                .birthDate(request.getBirthDate())
-                .gender(request.getGender())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .address(request.getAddress())
-                .hireDate(request.getHireDate())
-                .position(request.getPosition())
-                .salary(request.getSalary())
-                .contractType(request.getContractType())
-                .status(EmployeeStatus.ACTIVE)
-                .build();
+        Employee employee = new Employee();
+        employee.employeeCode = employeeCode;
+        employee.firstName = request.firstName;
+        employee.lastName = request.lastName;
+        employee.dpi = request.dpi;
+        employee.birthDate = request.birthDate;
+        employee.gender = request.gender;
+        employee.email = request.email;
+        employee.phone = request.phone;
+        employee.address = request.address;
+        employee.hireDate = request.hireDate;
+        employee.position = request.position;
+        employee.salary = request.salary;
+        employee.contractType = request.contractType;
+        employee.status = EmployeeStatus.ACTIVE;
 
-        // Set department if provided
-        if (request.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department", "id", request.getDepartmentId()));
-            employee.setDepartment(department);
+        if (request.departmentId != null) {
+            Department department = departmentRepository.findByIdOptional(request.departmentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Department", "id", request.departmentId));
+            employee.department = department;
         }
 
-        // Set supervisor if provided
-        if (request.getSupervisorId() != null) {
-            Employee supervisor = employeeRepository.findById(request.getSupervisorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getSupervisorId()));
-            employee.setSupervisor(supervisor);
+        if (request.supervisorId != null) {
+            Employee supervisor = employeeRepository.findByIdOptional(request.supervisorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.supervisorId));
+            employee.supervisor = supervisor;
         }
 
-        Employee saved = employeeRepository.save(employee);
-        log.info("Created employee with id: {} and code: {}", saved.getId(), saved.getEmployeeCode());
-        return EmployeeDTO.fromEntity(saved);
+        employeeRepository.persist(employee);
+        LOG.infof("Created employee with id: %d and code: %s", employee.id, employee.employeeCode);
+        return EmployeeDTO.fromEntity(employee);
     }
 
-    /**
-     * Updates an existing employee.
-     * @param id the employee ID
-     * @param request the update request
-     * @return the updated employee DTO
-     * @throws ResourceNotFoundException if employee not found
-     * @throws DuplicateResourceException if new DPI or email already exists
-     */
     @Transactional
     public EmployeeDTO update(Long id, UpdateEmployeeRequest request) {
-        log.debug("Updating employee with id: {}", id);
+        LOG.debugf("Updating employee with id: %d", id);
 
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
 
-        // Check for duplicate DPI if being changed
-        if (request.getDpi() != null && !request.getDpi().equals(employee.getDpi())) {
-            if (employeeRepository.existsByDpiAndIdNot(request.getDpi(), id)) {
-                throw new DuplicateResourceException("Employee", "DPI", request.getDpi());
+        if (request.dpi != null && !request.dpi.equals(employee.dpi)) {
+            if (employeeRepository.existsByDpiAndIdNot(request.dpi, id)) {
+                throw new DuplicateResourceException("Employee", "DPI", request.dpi);
             }
-            employee.setDpi(request.getDpi());
+            employee.dpi = request.dpi;
         }
 
-        // Check for duplicate email if being changed
-        if (request.getEmail() != null && !request.getEmail().equalsIgnoreCase(employee.getEmail())) {
-            if (employeeRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
-                throw new DuplicateResourceException("Employee", "email", request.getEmail());
+        if (request.email != null && !request.email.equalsIgnoreCase(employee.email)) {
+            if (employeeRepository.existsByEmailAndIdNot(request.email, id)) {
+                throw new DuplicateResourceException("Employee", "email", request.email);
             }
-            employee.setEmail(request.getEmail());
+            employee.email = request.email;
         }
 
-        // Update personal information
-        if (request.getFirstName() != null) {
-            employee.setFirstName(request.getFirstName());
+        if (request.firstName != null) {
+            employee.firstName = request.firstName;
         }
-        if (request.getLastName() != null) {
-            employee.setLastName(request.getLastName());
+        if (request.lastName != null) {
+            employee.lastName = request.lastName;
         }
-        if (request.getBirthDate() != null) {
-            employee.setBirthDate(request.getBirthDate());
+        if (request.birthDate != null) {
+            employee.birthDate = request.birthDate;
         }
-        if (request.getGender() != null) {
-            employee.setGender(request.getGender());
+        if (request.gender != null) {
+            employee.gender = request.gender;
         }
-
-        // Update contact information
-        if (request.getPhone() != null) {
-            employee.setPhone(request.getPhone());
+        if (request.phone != null) {
+            employee.phone = request.phone;
         }
-        if (request.getAddress() != null) {
-            employee.setAddress(request.getAddress());
+        if (request.address != null) {
+            employee.address = request.address;
         }
-
-        // Update employment information
-        if (request.getHireDate() != null) {
-            employee.setHireDate(request.getHireDate());
+        if (request.hireDate != null) {
+            employee.hireDate = request.hireDate;
         }
-        if (request.getTerminationDate() != null) {
-            employee.setTerminationDate(request.getTerminationDate());
+        if (request.terminationDate != null) {
+            employee.terminationDate = request.terminationDate;
         }
-        if (request.getPosition() != null) {
-            employee.setPosition(request.getPosition());
+        if (request.position != null) {
+            employee.position = request.position;
         }
-        if (request.getSalary() != null) {
-            employee.setSalary(request.getSalary());
+        if (request.salary != null) {
+            employee.salary = request.salary;
         }
-        if (request.getContractType() != null) {
-            employee.setContractType(request.getContractType());
+        if (request.contractType != null) {
+            employee.contractType = request.contractType;
         }
-        if (request.getStatus() != null) {
-            employee.setStatus(request.getStatus());
+        if (request.status != null) {
+            employee.status = request.status;
         }
 
-        // Update department if provided
-        if (request.getDepartmentId() != null) {
-            Department department = departmentRepository.findById(request.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department", "id", request.getDepartmentId()));
-            employee.setDepartment(department);
+        if (request.departmentId != null) {
+            Department department = departmentRepository.findByIdOptional(request.departmentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Department", "id", request.departmentId));
+            employee.department = department;
         }
 
-        // Update supervisor if provided
-        if (request.getSupervisorId() != null) {
-            if (request.getSupervisorId().equals(id)) {
+        if (request.supervisorId != null) {
+            if (request.supervisorId.equals(id)) {
                 throw new BusinessException("An employee cannot be their own supervisor");
             }
-            Employee supervisor = employeeRepository.findById(request.getSupervisorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getSupervisorId()));
-            
-            // Check for circular reference
+            Employee supervisor = employeeRepository.findByIdOptional(request.supervisorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.supervisorId));
+
             if (isCircularReference(employee, supervisor)) {
                 throw new BusinessException("Circular supervisor reference detected");
             }
-            employee.setSupervisor(supervisor);
+            employee.supervisor = supervisor;
         }
 
-        Employee saved = employeeRepository.save(employee);
-        log.info("Updated employee with id: {}", saved.getId());
-        return EmployeeDTO.fromEntity(saved);
+        LOG.infof("Updated employee with id: %d", employee.id);
+        return EmployeeDTO.fromEntity(employee);
     }
 
-    /**
-     * Deletes an employee by ID.
-     * @param id the employee ID
-     * @throws ResourceNotFoundException if employee not found
-     */
     @Transactional
     public void delete(Long id) {
-        log.debug("Deleting employee with id: {}", id);
+        LOG.debugf("Deleting employee with id: %d", id);
 
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
 
-        // Remove supervisor reference from subordinates
         List<Employee> subordinates = employeeRepository.findBySupervisorId(id);
         for (Employee subordinate : subordinates) {
-            subordinate.setSupervisor(null);
+            subordinate.supervisor = null;
         }
-        employeeRepository.saveAll(subordinates);
 
-        // Remove manager reference from departments
         List<Department> managedDepartments = departmentRepository.findByManagerId(id);
         for (Department department : managedDepartments) {
-            department.setManager(null);
+            department.manager = null;
         }
-        departmentRepository.saveAll(managedDepartments);
 
         employeeRepository.delete(employee);
-        log.info("Deleted employee with id: {}", id);
+        LOG.infof("Deleted employee with id: %d", id);
     }
 
-    /**
-     * Terminates an employee.
-     * @param id the employee ID
-     * @return the terminated employee DTO
-     * @throws ResourceNotFoundException if employee not found
-     */
     @Transactional
     public EmployeeDTO terminate(Long id) {
-        log.debug("Terminating employee with id: {}", id);
+        LOG.debugf("Terminating employee with id: %d", id);
 
-        Employee employee = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
 
-        employee.setStatus(EmployeeStatus.TERMINATED);
-        employee.setTerminationDate(java.time.LocalDate.now());
+        employee.status = EmployeeStatus.TERMINATED;
+        employee.terminationDate = LocalDate.now();
 
-        Employee saved = employeeRepository.save(employee);
-        log.info("Terminated employee with id: {}", id);
-        return EmployeeDTO.fromEntity(saved);
+        LOG.infof("Terminated employee with id: %d", id);
+        return EmployeeDTO.fromEntity(employee);
     }
 
-    /**
-     * Retrieves employees by department.
-     * @param departmentId the department ID
-     * @return list of employees in the department
-     */
     public List<EmployeeDTO> findByDepartment(Long departmentId) {
-        log.debug("Finding employees by department: {}", departmentId);
-        if (!departmentRepository.existsById(departmentId)) {
+        LOG.debugf("Finding employees by department: %d", departmentId);
+        if (departmentRepository.findByIdOptional(departmentId).isEmpty()) {
             throw new ResourceNotFoundException("Department", "id", departmentId);
         }
         return employeeRepository.findByDepartmentId(departmentId).stream()
@@ -304,13 +231,8 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves subordinates of an employee.
-     * @param supervisorId the supervisor's employee ID
-     * @return list of subordinates
-     */
     public List<EmployeeDTO> findSubordinates(Long supervisorId) {
-        log.debug("Finding subordinates of employee: {}", supervisorId);
+        LOG.debugf("Finding subordinates of employee: %d", supervisorId);
         if (!employeeRepository.existsById(supervisorId)) {
             throw new ResourceNotFoundException("Employee", "id", supervisorId);
         }
@@ -319,41 +241,26 @@ public class EmployeeService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Searches employees by name.
-     * @param name the search term
-     * @return list of matching employees
-     */
     public List<EmployeeDTO> searchByName(String name) {
-        log.debug("Searching employees by name: {}", name);
+        LOG.debugf("Searching employees by name: %s", name);
         return employeeRepository.findByNameContaining(name).stream()
                 .map(EmployeeDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Generates a unique employee code in format EMP-XXXX.
-     * @return the generated employee code
-     */
     private String generateEmployeeCode() {
         Integer maxNumber = employeeRepository.findMaxEmployeeCodeNumber();
         int nextNumber = (maxNumber == null) ? 1 : maxNumber + 1;
         return String.format("EMP-%04d", nextNumber);
     }
 
-    /**
-     * Checks if setting a supervisor would create a circular reference.
-     * @param employee the employee being updated
-     * @param newSupervisor the proposed new supervisor
-     * @return true if circular reference would be created
-     */
     private boolean isCircularReference(Employee employee, Employee newSupervisor) {
         Employee current = newSupervisor;
         while (current != null) {
-            if (current.getId().equals(employee.getId())) {
+            if (current.id.equals(employee.id)) {
                 return true;
             }
-            current = current.getSupervisor();
+            current = current.supervisor;
         }
         return false;
     }

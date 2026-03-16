@@ -1,102 +1,71 @@
 package dev.kreraker.korporis.repository;
 
 import dev.kreraker.korporis.model.Department;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository interface for Department entity operations.
- */
-@Repository
-public interface DepartmentRepository extends JpaRepository<Department, Long> {
+@ApplicationScoped
+public class DepartmentRepository implements PanacheRepository<Department> {
 
-    /**
-     * Finds a department by its unique code.
-     * @param code the department code
-     * @return Optional containing the department if found
-     */
-    Optional<Department> findByCode(String code);
+    public Optional<Department> findByCode(String code) {
+        return find("code", code).firstResultOptional();
+    }
 
-    /**
-     * Finds a department by its code, ignoring case.
-     * @param code the department code
-     * @return Optional containing the department if found
-     */
-    Optional<Department> findByCodeIgnoreCase(String code);
+    public Optional<Department> findByCodeIgnoreCase(String code) {
+        return find("lower(code)", code.toLowerCase()).firstResultOptional();
+    }
 
-    /**
-     * Checks if a department with the given code exists.
-     * @param code the department code
-     * @return true if exists
-     */
-    boolean existsByCode(String code);
+    public boolean existsByCode(String code) {
+        return count("code", code) > 0;
+    }
 
-    /**
-     * Checks if a department with the given code exists, excluding a specific ID.
-     * @param code the department code
-     * @param id the ID to exclude
-     * @return true if exists
-     */
-    boolean existsByCodeAndIdNot(String code, Long id);
+    public boolean existsByCodeAndIdNot(String code, Long id) {
+        return count("code = ?1 and id != ?2", code, id) > 0;
+    }
 
-    /**
-     * Finds all active departments.
-     * @return list of active departments
-     */
-    List<Department> findByActiveTrue();
+    public List<Department> findByActiveTrue() {
+        return list("active", true);
+    }
 
-    /**
-     * Finds all inactive departments.
-     * @return list of inactive departments
-     */
-    List<Department> findByActiveFalse();
+    public List<Department> findByActiveFalse() {
+        return list("active", false);
+    }
 
-    /**
-     * Finds departments by name containing the search term (case-insensitive).
-     * @param name the search term
-     * @return list of matching departments
-     */
-    List<Department> findByNameContainingIgnoreCase(String name);
+    public List<Department> findByNameContainingIgnoreCase(String name) {
+        return list("lower(name) like lower(?1)", "%" + name + "%");
+    }
 
-    /**
-     * Finds departments by location.
-     * @param location the location
-     * @return list of departments in the location
-     */
-    List<Department> findByLocationIgnoreCase(String location);
+    public List<Department> findByLocationIgnoreCase(String location) {
+        return list("lower(location)", location.toLowerCase());
+    }
 
-    /**
-     * Finds all departments with their employees eagerly loaded.
-     * @return list of departments with employees
-     */
-    @Query("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.employees WHERE d.active = true")
-    List<Department> findAllActiveWithEmployees();
+    public List<Department> findAllActiveWithEmployees() {
+        return getEntityManager()
+                .createQuery("SELECT DISTINCT d FROM Department d LEFT JOIN FETCH d.employees WHERE d.active = true",
+                        Department.class)
+                .getResultList();
+    }
 
-    /**
-     * Finds a department by ID with its manager eagerly loaded.
-     * @param id the department ID
-     * @return Optional containing the department if found
-     */
-    @Query("SELECT d FROM Department d LEFT JOIN FETCH d.manager WHERE d.id = :id")
-    Optional<Department> findByIdWithManager(@Param("id") Long id);
+    public Optional<Department> findByIdWithManager(Long id) {
+        return getEntityManager()
+                .createQuery("SELECT d FROM Department d LEFT JOIN FETCH d.manager WHERE d.id = :id",
+                        Department.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
 
-    /**
-     * Counts employees in a department.
-     * @param departmentId the department ID
-     * @return number of employees
-     */
-    @Query("SELECT COUNT(e) FROM Employee e WHERE e.department.id = :departmentId")
-    long countEmployeesByDepartmentId(@Param("departmentId") Long departmentId);
+    public long countEmployeesByDepartmentId(Long departmentId) {
+        return getEntityManager()
+                .createQuery("SELECT COUNT(e) FROM Employee e WHERE e.department.id = :departmentId", Long.class)
+                .setParameter("departmentId", departmentId)
+                .getSingleResult();
+    }
 
-    /**
-     * Finds departments managed by a specific employee.
-     * @param managerId the manager's employee ID
-     * @return list of departments managed by the employee
-     */
-    List<Department> findByManagerId(Long managerId);
+    public List<Department> findByManagerId(Long managerId) {
+        return list("manager.id", managerId);
+    }
 }

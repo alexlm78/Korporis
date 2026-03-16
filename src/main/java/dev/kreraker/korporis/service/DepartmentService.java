@@ -9,241 +9,166 @@ import dev.kreraker.korporis.model.Department;
 import dev.kreraker.korporis.model.Employee;
 import dev.kreraker.korporis.repository.DepartmentRepository;
 import dev.kreraker.korporis.repository.EmployeeRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service class for managing departments.
- */
-@Service
-@RequiredArgsConstructor
-@Slf4j
-@Transactional(readOnly = true)
+@ApplicationScoped
 public class DepartmentService {
 
-    private final DepartmentRepository departmentRepository;
-    private final EmployeeRepository employeeRepository;
+    private static final Logger LOG = Logger.getLogger(DepartmentService.class);
 
-    /**
-     * Retrieves all departments.
-     * @return list of all departments
-     */
+    @Inject
+    DepartmentRepository departmentRepository;
+
+    @Inject
+    EmployeeRepository employeeRepository;
+
     public List<DepartmentDTO> findAll() {
-        log.debug("Finding all departments");
-        return departmentRepository.findAll().stream()
+        LOG.debug("Finding all departments");
+        return departmentRepository.listAll().stream()
                 .map(DepartmentDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves all active departments.
-     * @return list of active departments
-     */
     public List<DepartmentDTO> findAllActive() {
-        log.debug("Finding all active departments");
+        LOG.debug("Finding all active departments");
         return departmentRepository.findByActiveTrue().stream()
                 .map(DepartmentDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves a department by its ID.
-     * @param id the department ID
-     * @return the department DTO
-     * @throws ResourceNotFoundException if department not found
-     */
     public DepartmentDTO findById(Long id) {
-        log.debug("Finding department by id: {}", id);
+        LOG.debugf("Finding department by id: %d", id);
         Department department = departmentRepository.findByIdWithManager(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
         return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Retrieves a department by its code.
-     * @param code the department code
-     * @return the department DTO
-     * @throws ResourceNotFoundException if department not found
-     */
     public DepartmentDTO findByCode(String code) {
-        log.debug("Finding department by code: {}", code);
+        LOG.debugf("Finding department by code: %s", code);
         Department department = departmentRepository.findByCode(code)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "code", code));
         return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Creates a new department.
-     * @param request the create request
-     * @return the created department DTO
-     * @throws DuplicateResourceException if department code already exists
-     */
     @Transactional
     public DepartmentDTO create(CreateDepartmentRequest request) {
-        log.debug("Creating department with code: {}", request.getCode());
+        LOG.debugf("Creating department with code: %s", request.code);
 
-        // Check for duplicate code
-        if (departmentRepository.existsByCode(request.getCode())) {
-            throw new DuplicateResourceException("Department", "code", request.getCode());
+        if (departmentRepository.existsByCode(request.code)) {
+            throw new DuplicateResourceException("Department", "code", request.code);
         }
 
-        Department department = Department.builder()
-                .code(request.getCode().toUpperCase())
-                .name(request.getName())
-                .description(request.getDescription())
-                .location(request.getLocation())
-                .active(true)
-                .build();
+        Department department = new Department();
+        department.code = request.code.toUpperCase();
+        department.name = request.name;
+        department.description = request.description;
+        department.location = request.location;
+        department.active = true;
 
-        // Set manager if provided
-        if (request.getManagerId() != null) {
-            Employee manager = employeeRepository.findById(request.getManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getManagerId()));
-            department.setManager(manager);
+        if (request.managerId != null) {
+            Employee manager = employeeRepository.findByIdOptional(request.managerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.managerId));
+            department.manager = manager;
         }
 
-        Department saved = departmentRepository.save(department);
-        log.info("Created department with id: {} and code: {}", saved.getId(), saved.getCode());
-        return DepartmentDTO.fromEntity(saved);
+        departmentRepository.persist(department);
+        LOG.infof("Created department with id: %d and code: %s", department.id, department.code);
+        return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Updates an existing department.
-     * @param id the department ID
-     * @param request the update request
-     * @return the updated department DTO
-     * @throws ResourceNotFoundException if department not found
-     * @throws DuplicateResourceException if new code already exists
-     */
     @Transactional
     public DepartmentDTO update(Long id, UpdateDepartmentRequest request) {
-        log.debug("Updating department with id: {}", id);
+        LOG.debugf("Updating department with id: %d", id);
 
-        Department department = departmentRepository.findById(id)
+        Department department = departmentRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-        // Check for duplicate code if code is being changed
-        if (request.getCode() != null && !request.getCode().equalsIgnoreCase(department.getCode())) {
-            if (departmentRepository.existsByCodeAndIdNot(request.getCode(), id)) {
-                throw new DuplicateResourceException("Department", "code", request.getCode());
+        if (request.code != null && !request.code.equalsIgnoreCase(department.code)) {
+            if (departmentRepository.existsByCodeAndIdNot(request.code, id)) {
+                throw new DuplicateResourceException("Department", "code", request.code);
             }
-            department.setCode(request.getCode().toUpperCase());
+            department.code = request.code.toUpperCase();
         }
 
-        if (request.getName() != null) {
-            department.setName(request.getName());
+        if (request.name != null) {
+            department.name = request.name;
+        }
+        if (request.description != null) {
+            department.description = request.description;
+        }
+        if (request.location != null) {
+            department.location = request.location;
+        }
+        if (request.active != null) {
+            department.active = request.active;
         }
 
-        if (request.getDescription() != null) {
-            department.setDescription(request.getDescription());
+        if (request.managerId != null) {
+            Employee manager = employeeRepository.findByIdOptional(request.managerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.managerId));
+            department.manager = manager;
         }
 
-        if (request.getLocation() != null) {
-            department.setLocation(request.getLocation());
-        }
-
-        if (request.getActive() != null) {
-            department.setActive(request.getActive());
-        }
-
-        // Update manager if provided
-        if (request.getManagerId() != null) {
-            Employee manager = employeeRepository.findById(request.getManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getManagerId()));
-            department.setManager(manager);
-        }
-
-        Department saved = departmentRepository.save(department);
-        log.info("Updated department with id: {}", saved.getId());
-        return DepartmentDTO.fromEntity(saved);
+        LOG.infof("Updated department with id: %d", department.id);
+        return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Deletes a department by its ID.
-     * @param id the department ID
-     * @throws ResourceNotFoundException if department not found
-     */
     @Transactional
     public void delete(Long id) {
-        log.debug("Deleting department with id: {}", id);
+        LOG.debugf("Deleting department with id: %d", id);
 
-        Department department = departmentRepository.findById(id)
+        Department department = departmentRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-        // Remove department reference from all employees
         List<Employee> employees = employeeRepository.findByDepartmentId(id);
         for (Employee employee : employees) {
-            employee.setDepartment(null);
+            employee.department = null;
         }
-        employeeRepository.saveAll(employees);
 
         departmentRepository.delete(department);
-        log.info("Deleted department with id: {}", id);
+        LOG.infof("Deleted department with id: %d", id);
     }
 
-    /**
-     * Deactivates a department (soft delete).
-     * @param id the department ID
-     * @return the deactivated department DTO
-     * @throws ResourceNotFoundException if department not found
-     */
     @Transactional
     public DepartmentDTO deactivate(Long id) {
-        log.debug("Deactivating department with id: {}", id);
+        LOG.debugf("Deactivating department with id: %d", id);
 
-        Department department = departmentRepository.findById(id)
+        Department department = departmentRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-        department.setActive(false);
-        Department saved = departmentRepository.save(department);
-        log.info("Deactivated department with id: {}", id);
-        return DepartmentDTO.fromEntity(saved);
+        department.active = false;
+        LOG.infof("Deactivated department with id: %d", id);
+        return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Activates a department.
-     * @param id the department ID
-     * @return the activated department DTO
-     * @throws ResourceNotFoundException if department not found
-     */
     @Transactional
     public DepartmentDTO activate(Long id) {
-        log.debug("Activating department with id: {}", id);
+        LOG.debugf("Activating department with id: %d", id);
 
-        Department department = departmentRepository.findById(id)
+        Department department = departmentRepository.findByIdOptional(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
 
-        department.setActive(true);
-        Department saved = departmentRepository.save(department);
-        log.info("Activated department with id: {}", id);
-        return DepartmentDTO.fromEntity(saved);
+        department.active = true;
+        LOG.infof("Activated department with id: %d", id);
+        return DepartmentDTO.fromEntity(department);
     }
 
-    /**
-     * Searches departments by name.
-     * @param name the search term
-     * @return list of matching departments
-     */
     public List<DepartmentDTO> searchByName(String name) {
-        log.debug("Searching departments by name: {}", name);
+        LOG.debugf("Searching departments by name: %s", name);
         return departmentRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(DepartmentDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Gets the count of employees in a department.
-     * @param id the department ID
-     * @return the employee count
-     */
     public long getEmployeeCount(Long id) {
-        log.debug("Getting employee count for department: {}", id);
-        if (!departmentRepository.existsById(id)) {
+        LOG.debugf("Getting employee count for department: %d", id);
+        if (departmentRepository.findByIdOptional(id).isEmpty()) {
             throw new ResourceNotFoundException("Department", "id", id);
         }
         return departmentRepository.countEmployeesByDepartmentId(id);

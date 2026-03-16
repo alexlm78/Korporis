@@ -4,150 +4,103 @@ import dev.kreraker.korporis.dto.CreateDepartmentRequest;
 import dev.kreraker.korporis.dto.DepartmentDTO;
 import dev.kreraker.korporis.dto.UpdateDepartmentRequest;
 import dev.kreraker.korporis.service.DepartmentService;
+import jakarta.inject.Inject;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 
-/**
- * REST controller for managing departments.
- */
-@RestController
-@RequestMapping("/api/departments")
-@RequiredArgsConstructor
-@Slf4j
+@Path("/api/departments")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class DepartmentController {
 
-    private final DepartmentService departmentService;
+    private static final Logger LOG = Logger.getLogger(DepartmentController.class);
 
-    /**
-     * GET /api/departments : Get all departments.
-     * @param activeOnly if true, returns only active departments
-     * @return list of departments
-     */
-    @GetMapping
-    public ResponseEntity<List<DepartmentDTO>> getAllDepartments(
-            @RequestParam(required = false, defaultValue = "false") boolean activeOnly) {
-        log.debug("REST request to get all departments, activeOnly: {}", activeOnly);
-        List<DepartmentDTO> departments = activeOnly 
-                ? departmentService.findAllActive() 
-                : departmentService.findAll();
-        return ResponseEntity.ok(departments);
+    @Inject
+    DepartmentService departmentService;
+
+    @GET
+    public List<DepartmentDTO> getAllDepartments(
+            @QueryParam("activeOnly") @DefaultValue("false") boolean activeOnly) {
+        LOG.debugf("REST request to get all departments, activeOnly: %s", activeOnly);
+        return activeOnly ? departmentService.findAllActive() : departmentService.findAll();
     }
 
-    /**
-     * GET /api/departments/:id : Get department by ID.
-     * @param id the department ID
-     * @return the department
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> getDepartmentById(@PathVariable Long id) {
-        log.debug("REST request to get department by id: {}", id);
-        DepartmentDTO department = departmentService.findById(id);
-        return ResponseEntity.ok(department);
+    @GET
+    @Path("/{id}")
+    public DepartmentDTO getDepartmentById(@PathParam("id") Long id) {
+        LOG.debugf("REST request to get department by id: %d", id);
+        return departmentService.findById(id);
     }
 
-    /**
-     * GET /api/departments/code/:code : Get department by code.
-     * @param code the department code
-     * @return the department
-     */
-    @GetMapping("/code/{code}")
-    public ResponseEntity<DepartmentDTO> getDepartmentByCode(@PathVariable String code) {
-        log.debug("REST request to get department by code: {}", code);
-        DepartmentDTO department = departmentService.findByCode(code);
-        return ResponseEntity.ok(department);
+    @GET
+    @Path("/code/{code}")
+    public DepartmentDTO getDepartmentByCode(@PathParam("code") String code) {
+        LOG.debugf("REST request to get department by code: %s", code);
+        return departmentService.findByCode(code);
     }
 
-    /**
-     * POST /api/departments : Create a new department.
-     * @param request the create request
-     * @return the created department
-     */
-    @PostMapping
-    public ResponseEntity<DepartmentDTO> createDepartment(
-            @Valid @RequestBody CreateDepartmentRequest request) {
-        log.debug("REST request to create department: {}", request.getCode());
+    @POST
+    public Response createDepartment(@Valid CreateDepartmentRequest request) {
+        LOG.debugf("REST request to create department: %s", request.code);
         DepartmentDTO created = departmentService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return Response.status(Response.Status.CREATED).entity(created).build();
     }
 
-    /**
-     * PUT /api/departments/:id : Update an existing department.
-     * @param id the department ID
-     * @param request the update request
-     * @return the updated department
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<DepartmentDTO> updateDepartment(
-            @PathVariable Long id,
-            @Valid @RequestBody UpdateDepartmentRequest request) {
-        log.debug("REST request to update department: {}", id);
-        DepartmentDTO updated = departmentService.update(id, request);
-        return ResponseEntity.ok(updated);
+    @PUT
+    @Path("/{id}")
+    public DepartmentDTO updateDepartment(@PathParam("id") Long id, @Valid UpdateDepartmentRequest request) {
+        LOG.debugf("REST request to update department: %d", id);
+        return departmentService.update(id, request);
     }
 
-    /**
-     * DELETE /api/departments/:id : Delete a department.
-     * @param id the department ID
-     * @return no content
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
-        log.debug("REST request to delete department: {}", id);
+    @DELETE
+    @Path("/{id}")
+    public Response deleteDepartment(@PathParam("id") Long id) {
+        LOG.debugf("REST request to delete department: %d", id);
         departmentService.delete(id);
-        return ResponseEntity.noContent().build();
+        return Response.noContent().build();
     }
 
-    /**
-     * PATCH /api/departments/:id/deactivate : Deactivate a department.
-     * @param id the department ID
-     * @return the deactivated department
-     */
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<DepartmentDTO> deactivateDepartment(@PathVariable Long id) {
-        log.debug("REST request to deactivate department: {}", id);
-        DepartmentDTO deactivated = departmentService.deactivate(id);
-        return ResponseEntity.ok(deactivated);
+    @PATCH
+    @Path("/{id}/deactivate")
+    public DepartmentDTO deactivateDepartment(@PathParam("id") Long id) {
+        LOG.debugf("REST request to deactivate department: %d", id);
+        return departmentService.deactivate(id);
     }
 
-    /**
-     * PATCH /api/departments/:id/activate : Activate a department.
-     * @param id the department ID
-     * @return the activated department
-     */
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<DepartmentDTO> activateDepartment(@PathVariable Long id) {
-        log.debug("REST request to activate department: {}", id);
-        DepartmentDTO activated = departmentService.activate(id);
-        return ResponseEntity.ok(activated);
+    @PATCH
+    @Path("/{id}/activate")
+    public DepartmentDTO activateDepartment(@PathParam("id") Long id) {
+        LOG.debugf("REST request to activate department: %d", id);
+        return departmentService.activate(id);
     }
 
-    /**
-     * GET /api/departments/search : Search departments by name.
-     * @param name the search term
-     * @return list of matching departments
-     */
-    @GetMapping("/search")
-    public ResponseEntity<List<DepartmentDTO>> searchDepartments(@RequestParam String name) {
-        log.debug("REST request to search departments by name: {}", name);
-        List<DepartmentDTO> departments = departmentService.searchByName(name);
-        return ResponseEntity.ok(departments);
+    @GET
+    @Path("/search")
+    public List<DepartmentDTO> searchDepartments(@QueryParam("name") String name) {
+        LOG.debugf("REST request to search departments by name: %s", name);
+        return departmentService.searchByName(name);
     }
 
-    /**
-     * GET /api/departments/:id/employee-count : Get employee count for a department.
-     * @param id the department ID
-     * @return the employee count
-     */
-    @GetMapping("/{id}/employee-count")
-    public ResponseEntity<Long> getEmployeeCount(@PathVariable Long id) {
-        log.debug("REST request to get employee count for department: {}", id);
-        long count = departmentService.getEmployeeCount(id);
-        return ResponseEntity.ok(count);
+    @GET
+    @Path("/{id}/employee-count")
+    public long getEmployeeCount(@PathParam("id") Long id) {
+        LOG.debugf("REST request to get employee count for department: %d", id);
+        return departmentService.getEmployeeCount(id);
     }
 }

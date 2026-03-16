@@ -1,137 +1,111 @@
 package dev.kreraker.korporis.dto;
 
-import dev.kreraker.korporis.model.*;
-import lombok.*;
+import dev.kreraker.korporis.model.ContractType;
+import dev.kreraker.korporis.model.Employee;
+import dev.kreraker.korporis.model.EmployeeStatus;
+import dev.kreraker.korporis.model.Gender;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Data Transfer Object for Employee entity (response).
- */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class EmployeeDTO {
 
-    private Long id;
-    private String employeeCode;
-    
-    // Personal Information
-    private String firstName;
-    private String lastName;
-    private String fullName;
-    private String dpi;
-    private LocalDate birthDate;
-    private Gender gender;
-    
-    // Contact Information
-    private String email;
-    private String phone;
-    private String address;
-    
-    // Employment Information
-    private LocalDate hireDate;
-    private LocalDate terminationDate;
-    private String position;
-    private BigDecimal salary;
-    private ContractType contractType;
-    private EmployeeStatus status;
-    
-    // Relationships
-    private Long departmentId;
-    private String departmentName;
-    private String departmentCode;
-    private Long supervisorId;
-    private String supervisorName;
-    private Integer subordinateCount;
-    
-    // Audit fields
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    public Long id;
+    public String employeeCode;
+    public String firstName;
+    public String lastName;
+    public String fullName;
+    public String dpi;
+    public LocalDate birthDate;
+    public Gender gender;
+    public String email;
+    public String phone;
+    public String address;
+    public LocalDate hireDate;
+    public LocalDate terminationDate;
+    public String position;
+    public BigDecimal salary;
+    public ContractType contractType;
+    public EmployeeStatus status;
+    public Long departmentId;
+    public String departmentName;
+    public String departmentCode;
+    public Long supervisorId;
+    public String supervisorName;
+    public Integer subordinateCount;
+    public LocalDateTime createdAt;
+    public LocalDateTime updatedAt;
 
-    /**
-     * Creates an EmployeeDTO from an Employee entity.
-     * @param employee the employee entity
-     * @return the DTO
-     */
     public static EmployeeDTO fromEntity(Employee employee) {
         if (employee == null) {
             return null;
         }
 
-        EmployeeDTOBuilder builder = EmployeeDTO.builder()
-                .id(employee.getId())
-                .employeeCode(employee.getEmployeeCode())
-                .firstName(employee.getFirstName())
-                .lastName(employee.getLastName())
-                .fullName(employee.getFullName())
-                .dpi(employee.getDpi())
-                .birthDate(employee.getBirthDate())
-                .gender(employee.getGender())
-                .email(employee.getEmail())
-                .phone(employee.getPhone())
-                .address(employee.getAddress())
-                .hireDate(employee.getHireDate())
-                .terminationDate(employee.getTerminationDate())
-                .position(employee.getPosition())
-                .salary(employee.getSalary())
-                .contractType(employee.getContractType())
-                .status(employee.getStatus())
-                .createdAt(employee.getCreatedAt())
-                .updatedAt(employee.getUpdatedAt());
+        EmployeeDTO dto = new EmployeeDTO();
+        dto.id = employee.id;
+        dto.employeeCode = employee.employeeCode;
+        dto.firstName = employee.firstName;
+        dto.lastName = employee.lastName;
+        dto.fullName = employee.getFullName();
+        dto.dpi = employee.dpi;
+        dto.birthDate = employee.birthDate;
+        dto.gender = employee.gender;
+        dto.email = employee.email;
+        dto.phone = employee.phone;
+        dto.address = employee.address;
+        dto.hireDate = employee.hireDate;
+        dto.terminationDate = employee.terminationDate;
+        dto.position = employee.position;
+        dto.salary = employee.salary;
+        dto.contractType = employee.contractType;
+        dto.status = employee.status;
+        dto.createdAt = employee.createdAt;
+        dto.updatedAt = employee.updatedAt;
 
-        if (employee.getDepartment() != null) {
-            builder.departmentId(employee.getDepartment().getId())
-                   .departmentName(employee.getDepartment().getName())
-                   .departmentCode(employee.getDepartment().getCode());
+        if (employee.department != null) {
+            dto.departmentId = employee.department.id;
+            dto.departmentName = employee.department.name;
+            dto.departmentCode = employee.department.code;
         }
 
-        if (employee.getSupervisor() != null) {
-            builder.supervisorId(employee.getSupervisor().getId())
-                   .supervisorName(employee.getSupervisor().getFullName());
+        if (employee.supervisor != null) {
+            dto.supervisorId = employee.supervisor.id;
+            dto.supervisorName = employee.supervisor.getFullName();
         }
 
-        if (employee.getSubordinates() != null) {
-            builder.subordinateCount(employee.getSubordinates().size());
+        if (employee.subordinates != null) {
+            dto.subordinateCount = employee.subordinates.size();
         }
 
-        return builder.build();
+        return dto;
     }
 
-    /**
-     * Creates a simple EmployeeDTO without relationships.
-     * @param employee the employee entity
-     * @return the DTO
-     */
     public static EmployeeDTO fromEntitySimple(Employee employee) {
         if (employee == null) {
             return null;
         }
 
-        return EmployeeDTO.builder()
-                .id(employee.getId())
-                .employeeCode(employee.getEmployeeCode())
-                .firstName(employee.getFirstName())
-                .lastName(employee.getLastName())
-                .fullName(employee.getFullName())
-                .dpi(employee.getDpi())
-                .birthDate(employee.getBirthDate())
-                .gender(employee.getGender())
-                .email(employee.getEmail())
-                .phone(employee.getPhone())
-                .address(employee.getAddress())
-                .hireDate(employee.getHireDate())
-                .terminationDate(employee.getTerminationDate())
-                .position(employee.getPosition())
-                .salary(employee.getSalary())
-                .contractType(employee.getContractType())
-                .status(employee.getStatus())
-                .createdAt(employee.getCreatedAt())
-                .updatedAt(employee.getUpdatedAt())
-                .build();
+        EmployeeDTO dto = new EmployeeDTO();
+        dto.id = employee.id;
+        dto.employeeCode = employee.employeeCode;
+        dto.firstName = employee.firstName;
+        dto.lastName = employee.lastName;
+        dto.fullName = employee.getFullName();
+        dto.dpi = employee.dpi;
+        dto.birthDate = employee.birthDate;
+        dto.gender = employee.gender;
+        dto.email = employee.email;
+        dto.phone = employee.phone;
+        dto.address = employee.address;
+        dto.hireDate = employee.hireDate;
+        dto.terminationDate = employee.terminationDate;
+        dto.position = employee.position;
+        dto.salary = employee.salary;
+        dto.contractType = employee.contractType;
+        dto.status = employee.status;
+        dto.createdAt = employee.createdAt;
+        dto.updatedAt = employee.updatedAt;
+        return dto;
     }
 }

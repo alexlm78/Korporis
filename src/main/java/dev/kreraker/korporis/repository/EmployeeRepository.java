@@ -3,204 +3,139 @@ package dev.kreraker.korporis.repository;
 import dev.kreraker.korporis.model.ContractType;
 import dev.kreraker.korporis.model.Employee;
 import dev.kreraker.korporis.model.EmployeeStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository interface for Employee entity operations.
- */
-@Repository
-public interface EmployeeRepository extends JpaRepository<Employee, Long> {
+@ApplicationScoped
+public class EmployeeRepository implements PanacheRepository<Employee> {
 
-    /**
-     * Finds an employee by their unique employee code.
-     * @param employeeCode the employee code
-     * @return Optional containing the employee if found
-     */
-    Optional<Employee> findByEmployeeCode(String employeeCode);
+    public Optional<Employee> findByEmployeeCode(String employeeCode) {
+        return find("employeeCode", employeeCode).firstResultOptional();
+    }
 
-    /**
-     * Finds an employee by their DPI (national ID).
-     * @param dpi the DPI number
-     * @return Optional containing the employee if found
-     */
-    Optional<Employee> findByDpi(String dpi);
+    public Optional<Employee> findByDpi(String dpi) {
+        return find("dpi", dpi).firstResultOptional();
+    }
 
-    /**
-     * Finds an employee by their email address.
-     * @param email the email address
-     * @return Optional containing the employee if found
-     */
-    Optional<Employee> findByEmail(String email);
+    public Optional<Employee> findByEmail(String email) {
+        return find("email", email).firstResultOptional();
+    }
 
-    /**
-     * Checks if an employee with the given employee code exists.
-     * @param employeeCode the employee code
-     * @return true if exists
-     */
-    boolean existsByEmployeeCode(String employeeCode);
+    public boolean existsByEmployeeCode(String employeeCode) {
+        return count("employeeCode", employeeCode) > 0;
+    }
 
-    /**
-     * Checks if an employee with the given DPI exists.
-     * @param dpi the DPI number
-     * @return true if exists
-     */
-    boolean existsByDpi(String dpi);
+    public boolean existsByDpi(String dpi) {
+        return count("dpi", dpi) > 0;
+    }
 
-    /**
-     * Checks if an employee with the given email exists.
-     * @param email the email address
-     * @return true if exists
-     */
-    boolean existsByEmail(String email);
+    public boolean existsByEmail(String email) {
+        return count("email", email) > 0;
+    }
 
-    /**
-     * Checks if an employee with the given DPI exists, excluding a specific ID.
-     * @param dpi the DPI number
-     * @param id the ID to exclude
-     * @return true if exists
-     */
-    boolean existsByDpiAndIdNot(String dpi, Long id);
+    public boolean existsByDpiAndIdNot(String dpi, Long id) {
+        return count("dpi = ?1 and id != ?2", dpi, id) > 0;
+    }
 
-    /**
-     * Checks if an employee with the given email exists, excluding a specific ID.
-     * @param email the email address
-     * @param id the ID to exclude
-     * @return true if exists
-     */
-    boolean existsByEmailAndIdNot(String email, Long id);
+    public boolean existsByEmailAndIdNot(String email, Long id) {
+        return count("email = ?1 and id != ?2", email, id) > 0;
+    }
 
-    /**
-     * Finds all employees by their status.
-     * @param status the employee status
-     * @return list of employees with the given status
-     */
-    List<Employee> findByStatus(EmployeeStatus status);
+    public List<Employee> findByStatus(EmployeeStatus status) {
+        return list("status", status);
+    }
 
-    /**
-     * Finds all active employees.
-     * @return list of active employees
-     */
-    default List<Employee> findAllActive() {
+    public List<Employee> findAllActive() {
         return findByStatus(EmployeeStatus.ACTIVE);
     }
 
-    /**
-     * Finds all employees in a specific department.
-     * @param departmentId the department ID
-     * @return list of employees in the department
-     */
-    List<Employee> findByDepartmentId(Long departmentId);
+    public List<Employee> findByDepartmentId(Long departmentId) {
+        return list("department.id", departmentId);
+    }
 
-    /**
-     * Finds all employees with a specific supervisor.
-     * @param supervisorId the supervisor's employee ID
-     * @return list of subordinates
-     */
-    List<Employee> findBySupervisorId(Long supervisorId);
+    public List<Employee> findBySupervisorId(Long supervisorId) {
+        return list("supervisor.id", supervisorId);
+    }
 
-    /**
-     * Finds all employees without a supervisor (top-level employees).
-     * @return list of employees without supervisors
-     */
-    List<Employee> findBySupervisorIsNull();
+    public List<Employee> findBySupervisorIsNull() {
+        return list("supervisor is null");
+    }
 
-    /**
-     * Finds employees by contract type.
-     * @param contractType the contract type
-     * @return list of employees with the given contract type
-     */
-    List<Employee> findByContractType(ContractType contractType);
+    public List<Employee> findByContractType(ContractType contractType) {
+        return list("contractType", contractType);
+    }
 
-    /**
-     * Finds employees by name (first or last name containing the search term).
-     * @param name the search term
-     * @return list of matching employees
-     */
-    @Query("SELECT e FROM Employee e WHERE LOWER(e.firstName) LIKE LOWER(CONCAT('%', :name, '%')) " +
-           "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<Employee> findByNameContaining(@Param("name") String name);
+    public List<Employee> findByNameContaining(String name) {
+        return getEntityManager()
+                .createQuery("SELECT e FROM Employee e WHERE LOWER(e.firstName) LIKE LOWER(CONCAT('%', :name, '%')) "
+                        + "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :name, '%'))", Employee.class)
+                .setParameter("name", name)
+                .getResultList();
+    }
 
-    /**
-     * Finds employees hired between two dates.
-     * @param startDate the start date
-     * @param endDate the end date
-     * @return list of employees hired in the date range
-     */
-    List<Employee> findByHireDateBetween(LocalDate startDate, LocalDate endDate);
+    public List<Employee> findByHireDateBetween(LocalDate startDate, LocalDate endDate) {
+        return list("hireDate between ?1 and ?2", startDate, endDate);
+    }
 
-    /**
-     * Finds employees hired after a specific date.
-     * @param date the date
-     * @return list of employees hired after the date
-     */
-    List<Employee> findByHireDateAfter(LocalDate date);
+    public List<Employee> findByHireDateAfter(LocalDate date) {
+        return list("hireDate > ?1", date);
+    }
 
-    /**
-     * Finds an employee by ID with department eagerly loaded.
-     * @param id the employee ID
-     * @return Optional containing the employee if found
-     */
-    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.department WHERE e.id = :id")
-    Optional<Employee> findByIdWithDepartment(@Param("id") Long id);
+    public Optional<Employee> findByIdWithDepartment(Long id) {
+        return getEntityManager()
+                .createQuery("SELECT e FROM Employee e LEFT JOIN FETCH e.department WHERE e.id = :id", Employee.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
 
-    /**
-     * Finds an employee by ID with supervisor eagerly loaded.
-     * @param id the employee ID
-     * @return Optional containing the employee if found
-     */
-    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.supervisor WHERE e.id = :id")
-    Optional<Employee> findByIdWithSupervisor(@Param("id") Long id);
+    public Optional<Employee> findByIdWithSupervisor(Long id) {
+        return getEntityManager()
+                .createQuery("SELECT e FROM Employee e LEFT JOIN FETCH e.supervisor WHERE e.id = :id", Employee.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
 
-    /**
-     * Finds an employee by ID with all relationships eagerly loaded.
-     * @param id the employee ID
-     * @return Optional containing the employee if found
-     */
-    @Query("SELECT e FROM Employee e " +
-           "LEFT JOIN FETCH e.department " +
-           "LEFT JOIN FETCH e.supervisor " +
-           "WHERE e.id = :id")
-    Optional<Employee> findByIdWithRelationships(@Param("id") Long id);
+    public Optional<Employee> findByIdWithRelationships(Long id) {
+        return getEntityManager()
+                .createQuery("SELECT e FROM Employee e LEFT JOIN FETCH e.department LEFT JOIN FETCH e.supervisor "
+                        + "WHERE e.id = :id", Employee.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
 
-    /**
-     * Finds all employees with their departments eagerly loaded.
-     * @return list of employees with departments
-     */
-    @Query("SELECT DISTINCT e FROM Employee e LEFT JOIN FETCH e.department")
-    List<Employee> findAllWithDepartment();
+    public List<Employee> findAllWithDepartment() {
+        return getEntityManager()
+                .createQuery("SELECT DISTINCT e FROM Employee e LEFT JOIN FETCH e.department", Employee.class)
+                .getResultList();
+    }
 
-    /**
-     * Counts employees by department.
-     * @param departmentId the department ID
-     * @return number of employees in the department
-     */
-    long countByDepartmentId(Long departmentId);
+    public long countByDepartmentId(Long departmentId) {
+        return count("department.id", departmentId);
+    }
 
-    /**
-     * Counts employees by status.
-     * @param status the employee status
-     * @return number of employees with the status
-     */
-    long countByStatus(EmployeeStatus status);
+    public long countByStatus(EmployeeStatus status) {
+        return count("status", status);
+    }
 
-    /**
-     * Finds the maximum employee code number for generating new codes.
-     * @return the maximum code number or null if no employees exist
-     */
-    @Query("SELECT MAX(CAST(SUBSTRING(e.employeeCode, 5) AS int)) FROM Employee e WHERE e.employeeCode LIKE 'EMP-%'")
-    Integer findMaxEmployeeCodeNumber();
+    public Integer findMaxEmployeeCodeNumber() {
+        return getEntityManager()
+                .createQuery("SELECT MAX(CAST(SUBSTRING(e.employeeCode, 5) AS int)) FROM Employee e "
+                        + "WHERE e.employeeCode LIKE 'EMP-%'", Integer.class)
+                .getSingleResult();
+    }
 
-    /**
-     * Finds employees by position.
-     * @param position the position title
-     * @return list of employees with the given position
-     */
-    List<Employee> findByPositionContainingIgnoreCase(String position);
+    public List<Employee> findByPositionContainingIgnoreCase(String position) {
+        return list("lower(position) like lower(?1)", "%" + position + "%");
+    }
+
+    public boolean existsById(Long id) {
+        return count("id", id) > 0;
+    }
 }
