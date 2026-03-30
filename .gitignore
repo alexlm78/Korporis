@@ -441,7 +441,7 @@ appsettings.*.json
 # Kreaker specific files
 CLAUDE.md
 WARP.md
-.claude
-.kiro
-.trae
+.claude/
+.kiro/
+.trae/
 doxs/

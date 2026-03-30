@@ -68,4 +68,58 @@ public class DepartmentRepository implements PanacheRepository<Department> {
     public List<Department> findByManagerId(Long managerId) {
         return list("manager.id", managerId);
     }
+
+    // -------------------------------------------------------------------------
+    // Sub-department queries
+    // -------------------------------------------------------------------------
+
+    /** Returns all root (top-level) departments — those without a parent. */
+    public List<Department> findRootDepartments() {
+        return list("parentDepartment is null");
+    }
+
+    /** Returns all active root departments. */
+    public List<Department> findActiveRootDepartments() {
+        return list("parentDepartment is null and active = true");
+    }
+
+    /** Returns the direct sub-departments of the given parent department. */
+    public List<Department> findSubDepartmentsByParentId(Long parentId) {
+        return list("parentDepartment.id", parentId);
+    }
+
+    /** Returns the active direct sub-departments of the given parent department. */
+    public List<Department> findActiveSubDepartmentsByParentId(Long parentId) {
+        return list("parentDepartment.id = ?1 and active = true", parentId);
+    }
+
+    /**
+     * Fetches a department together with its parent and sub-departments in a
+     * single query to avoid N+1 issues.
+     */
+    public Optional<Department> findByIdWithHierarchy(Long id) {
+        return getEntityManager()
+                .createQuery(
+                        "SELECT d FROM Department d " +
+                        "LEFT JOIN FETCH d.manager " +
+                        "LEFT JOIN FETCH d.parentDepartment " +
+                        "LEFT JOIN FETCH d.subDepartments " +
+                        "WHERE d.id = :id",
+                        Department.class)
+                .setParameter("id", id)
+                .getResultStream()
+                .findFirst();
+    }
+
+    /** Checks whether a department has any sub-departments. */
+    public boolean hasSubDepartments(Long departmentId) {
+        return count("parentDepartment.id", departmentId) > 0;
+    }
+
+    /**
+     * Counts all sub-departments (direct children) of the given parent.
+     */
+    public long countSubDepartmentsByParentId(Long parentId) {
+        return count("parentDepartment.id", parentId);
+    }
 }

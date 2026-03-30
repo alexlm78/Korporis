@@ -28,79 +28,79 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class EmployeeController {
 
-    private static final Logger LOG = Logger.getLogger(EmployeeController.class);
+   private static final Logger LOG = Logger.getLogger(EmployeeController.class);
 
-    @Inject
-    EmployeeService employeeService;
+   @Inject
+   EmployeeService employeeService;
 
-    @GET
-    public List<EmployeeDTO> getAllEmployees(
-            @QueryParam("activeOnly") @DefaultValue("false") boolean activeOnly) {
-        LOG.debugf("REST request to get all employees, activeOnly: %s", activeOnly);
-        return activeOnly ? employeeService.findAllActive() : employeeService.findAll();
-    }
+   @GET
+   public List<EmployeeDTO> getAllEmployees(
+      @QueryParam("activeOnly") @DefaultValue("false") boolean activeOnly) {
+      LOG.debugf("REST request to get all employees, activeOnly: %s", activeOnly);
+      return activeOnly ? employeeService.findAllActive() : employeeService.findAll();
+   }
 
-    @GET
-    @Path("/{id}")
-    public EmployeeDTO getEmployeeById(@PathParam("id") Long id) {
-        LOG.debugf("REST request to get employee by id: %d", id);
-        return employeeService.findById(id);
-    }
+   @GET
+   @Path("/{id}")
+   public EmployeeDTO getEmployeeById(@PathParam("id") Long id) {
+      LOG.debugf("REST request to get employee by id: %d", id);
+      return employeeService.findById(id);
+   }
 
-    @GET
-    @Path("/code/{code}")
-    public EmployeeDTO getEmployeeByCode(@PathParam("code") String code) {
-        LOG.debugf("REST request to get employee by code: %s", code);
-        return employeeService.findByEmployeeCode(code);
-    }
+   @GET
+   @Path("/code/{code}")
+   public EmployeeDTO getEmployeeByCode(@PathParam("code") String code) {
+      LOG.debugf("REST request to get employee by code: %s", code);
+      return employeeService.findByEmployeeCode(code);
+   }
 
-    @POST
-    public Response createEmployee(@Valid CreateEmployeeRequest request) {
-        LOG.debugf("REST request to create employee: %s %s", request.firstName, request.lastName);
-        EmployeeDTO created = employeeService.create(request);
-        return Response.status(Response.Status.CREATED).entity(created).build();
-    }
+   @POST
+   public Response createEmployee(@Valid CreateEmployeeRequest request) {
+      LOG.debugf("REST request to create employee: %s %s", request.firstName, request.lastName);
+      EmployeeDTO created = employeeService.create(request);
+      return Response.status(Response.Status.CREATED).entity(created).build();
+   }
 
-    @PUT
-    @Path("/{id}")
-    public EmployeeDTO updateEmployee(@PathParam("id") Long id, @Valid UpdateEmployeeRequest request) {
-        LOG.debugf("REST request to update employee: %d", id);
-        return employeeService.update(id, request);
-    }
+   @PUT
+   @Path("/{id}")
+   public EmployeeDTO updateEmployee(@PathParam("id") Long id, @Valid UpdateEmployeeRequest request) {
+      LOG.debugf("REST request to update employee: %d", id);
+      return employeeService.update(id, request);
+   }
 
-    @DELETE
-    @Path("/{id}")
-    public Response deleteEmployee(@PathParam("id") Long id) {
-        LOG.debugf("REST request to delete employee: %d", id);
-        employeeService.delete(id);
-        return Response.noContent().build();
-    }
+   @DELETE
+   @Path("/{id}")
+   public Response deleteEmployee(@PathParam("id") Long id) {
+      LOG.debugf("REST request to delete employee: %d", id);
+      employeeService.delete(id);
+      return Response.noContent().build();
+   }
 
-    @PATCH
-    @Path("/{id}/terminate")
-    public EmployeeDTO terminateEmployee(@PathParam("id") Long id) {
-        LOG.debugf("REST request to terminate employee: %d", id);
-        return employeeService.terminate(id);
-    }
+   @PATCH
+   @Path("/{id}/terminate")
+   public EmployeeDTO terminateEmployee(@PathParam("id") Long id) {
+      LOG.debugf("REST request to terminate employee: %d", id);
+      return employeeService.terminate(id);
+   }
 
-    @GET
-    @Path("/department/{departmentId}")
-    public List<EmployeeDTO> getEmployeesByDepartment(@PathParam("departmentId") Long departmentId) {
-        LOG.debugf("REST request to get employees by department: %d", departmentId);
-        return employeeService.findByDepartment(departmentId);
-    }
+   @GET
+   @Path("/department/{departmentId}")
+   public List<EmployeeDTO> getEmployeesByDepartment(@PathParam("departmentId") Long departmentId) {
+      LOG.debugf("REST request to get employees by department: %d", departmentId);
+      return employeeService.findByDepartment(departmentId);
+   }
 
-    @GET
-    @Path("/{id}/subordinates")
-    public List<EmployeeDTO> getSubordinates(@PathParam("id") Long id) {
-        LOG.debugf("REST request to get subordinates of employee: %d", id);
-        return employeeService.findSubordinates(id);
-    }
+   @GET
+   @Path("/{id}/subordinates")
+   public List<EmployeeDTO> getSubordinates(@PathParam("id") Long id) {
+      LOG.debugf("REST request to get subordinates of employee: %d", id);
+      return employeeService.findSubordinates(id);
+   }
 
-    @GET
-    @Path("/search")
-    public List<EmployeeDTO> searchEmployees(@QueryParam("name") String name) {
-        LOG.debugf("REST request to search employees by name: %s", name);
-        return employeeService.searchByName(name);
-    }
+   @GET
+   @Path("/search")
+   public List<EmployeeDTO> searchEmployees(@QueryParam("name") String name) {
+      LOG.debugf("REST request to search employees by name: %s", name);
+      return employeeService.searchByName(name);
+   }
 }

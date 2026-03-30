@@ -23,6 +23,10 @@ This document provides comprehensive documentation for all API endpoints availab
    - [Activate Department](#activate-department)
    - [Deactivate Department](#deactivate-department)
    - [Delete Department](#delete-department)
+   - [Get Sub-Departments](#get-sub-departments)
+   - [Get Sub-Department Count](#get-sub-department-count)
+   - [Set Parent Department](#set-parent-department)
+   - [Remove Parent Department](#remove-parent-department)
 
 2. [Employee Endpoints](#employee-endpoints)
    - [List All Employees](#list-all-employees)
@@ -56,10 +60,26 @@ Retrieves a list of all departments in the system.
 
 **Endpoint:** `GET /api/departments`
 
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| activeOnly | Boolean | false | When true, returns only active departments |
+| rootOnly | Boolean | false | When true, returns only root (top-level) departments (no parent) |
+
 **Response:** `200 OK`
 
 ```bash
+# All departments
 curl -X GET http://localhost:8080/api/departments
+
+# Only active departments
+curl -X GET "http://localhost:8080/api/departments?activeOnly=true"
+
+# Only root (top-level) departments
+curl -X GET "http://localhost:8080/api/departments?rootOnly=true"
+
+# Only active root departments
+curl -X GET "http://localhost:8080/api/departments?activeOnly=true&rootOnly=true"
 ```
 
 **Response Body:**
@@ -75,6 +95,22 @@ curl -X GET http://localhost:8080/api/departments
     "managerId": 1,
     "managerName": "Carlos Martinez",
     "employeeCount": 4,
+    "parentDepartmentId": null,
+    "parentDepartmentName": null,
+    "subDepartments": [
+      {
+        "id": 6,
+        "code": "IT-DEV",
+        "name": "Development",
+        "description": "Software development and engineering team",
+        "location": "Building A, Floor 3",
+        "active": true,
+        "parentDepartmentId": 1,
+        "parentDepartmentName": "Information Technology",
+        "createdAt": "2026-01-25T10:00:00",
+        "updatedAt": "2026-01-25T10:00:00"
+      }
+    ],
     "createdAt": "2026-01-25T10:00:00",
     "updatedAt": "2026-01-25T10:00:00"
   }
@@ -173,7 +209,7 @@ curl -X GET "http://localhost:8080/api/departments/search?name=tech"
 
 ### Create Department
 
-Creates a new department in the system.
+Creates a new department in the system. Optionally assign it as a sub-department by providing `parentDepartmentId`.
 
 **Endpoint:** `POST /api/departments`
 
@@ -184,10 +220,13 @@ Creates a new department in the system.
 | name | String | Yes | Department name (2-100 characters) |
 | description | String | No | Department description (max 500 characters) |
 | location | String | No | Physical location (max 200 characters) |
+| managerId | Long | No | ID of the employee to assign as manager |
+| parentDepartmentId | Long | No | ID of the parent department (omit for root departments) |
 
 **Response:** `201 Created`
 
 ```bash
+# Create a root department
 curl -X POST http://localhost:8080/api/departments \
   -H "Content-Type: application/json" \
   -d '{
@@ -196,20 +235,34 @@ curl -X POST http://localhost:8080/api/departments \
     "description": "Marketing and advertising department",
     "location": "Building A, Floor 2"
   }'
+
+# Create a sub-department under IT (id=1)
+curl -X POST http://localhost:8080/api/departments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "IT-DEV",
+    "name": "Development",
+    "description": "Software development and engineering team",
+    "location": "Building A, Floor 3",
+    "parentDepartmentId": 1
+  }'
 ```
 
 **Response Body:**
 ```json
 {
   "id": 6,
-  "code": "MKT",
-  "name": "Marketing",
-  "description": "Marketing and advertising department",
-  "location": "Building A, Floor 2",
+  "code": "IT-DEV",
+  "name": "Development",
+  "description": "Software development and engineering team",
+  "location": "Building A, Floor 3",
   "active": true,
   "managerId": null,
   "managerName": null,
   "employeeCount": 0,
+  "parentDepartmentId": 1,
+  "parentDepartmentName": "Information Technology",
+  "subDepartments": [],
   "createdAt": "2026-01-25T12:00:00",
   "updatedAt": "2026-01-25T12:00:00"
 }
@@ -341,6 +394,141 @@ Permanently deletes a department from the system.
 ```bash
 curl -X DELETE http://localhost:8080/api/departments/1
 ```
+
+---
+
+### Get Sub-Departments
+
+Retrieves the direct sub-departments of a given department.
+
+**Endpoint:** `GET /api/departments/{id}/sub-departments`
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | The unique department ID |
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| activeOnly | Boolean | false | When true, returns only active sub-departments |
+
+**Response:** `200 OK` or `404 Not Found`
+
+```bash
+# All sub-departments of IT (id=1)
+curl -X GET http://localhost:8080/api/departments/1/sub-departments
+
+# Only active sub-departments
+curl -X GET "http://localhost:8080/api/departments/1/sub-departments?activeOnly=true"
+```
+
+**Response Body:**
+```json
+[
+  {
+    "id": 6,
+    "code": "IT-DEV",
+    "name": "Development",
+    "description": "Software development and engineering team",
+    "location": "Building A, Floor 3",
+    "active": true,
+    "parentDepartmentId": 1,
+    "parentDepartmentName": "Information Technology",
+    "createdAt": "2026-01-25T10:00:00",
+    "updatedAt": "2026-01-25T10:00:00"
+  },
+  {
+    "id": 7,
+    "code": "IT-SUP",
+    "name": "Technical Support",
+    "description": "Handles internal and external technical support",
+    "location": "Building A, Floor 3",
+    "active": true,
+    "parentDepartmentId": 1,
+    "parentDepartmentName": "Information Technology",
+    "createdAt": "2026-01-25T10:00:00",
+    "updatedAt": "2026-01-25T10:00:00"
+  }
+]
+```
+
+---
+
+### Get Sub-Department Count
+
+Returns the number of direct sub-departments of a given department.
+
+**Endpoint:** `GET /api/departments/{id}/sub-departments/count`
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | The unique department ID |
+
+**Response:** `200 OK` or `404 Not Found`
+
+```bash
+curl -X GET http://localhost:8080/api/departments/1/sub-departments/count
+```
+
+**Response Body:**
+```
+5
+```
+
+---
+
+### Set Parent Department
+
+Assigns a parent department to the given department, making it a sub-department.
+Returns `409 Conflict` if the assignment would create a circular reference.
+
+**Endpoint:** `PUT /api/departments/{id}/parent/{parentId}`
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | The department to assign a parent to |
+| parentId | Long | The department to set as parent |
+
+**Response:** `200 OK`, `404 Not Found`, or `409 Conflict`
+
+```bash
+# Make IT-DEV (id=6) a sub-department of IT (id=1)
+curl -X PUT http://localhost:8080/api/departments/6/parent/1
+```
+
+**Response Body:** Updated `DepartmentDTO` with `parentDepartmentId` and `parentDepartmentName` populated.
+
+**Error (circular reference):**
+```json
+{
+  "message": "Circular reference detected: department 'IT' is already an ancestor of department 'IT-DEV'.",
+  "status": 409
+}
+```
+
+---
+
+### Remove Parent Department
+
+Removes the parent from a department, promoting it to a root (top-level) department.
+
+**Endpoint:** `DELETE /api/departments/{id}/parent`
+
+**Path Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| id | Long | The department to promote to root level |
+
+**Response:** `200 OK` or `404 Not Found`
+
+```bash
+curl -X DELETE http://localhost:8080/api/departments/6/parent
+```
+
+**Response Body:** Updated `DepartmentDTO` with `parentDepartmentId: null` and `parentDepartmentName: null`.
 
 ---
 

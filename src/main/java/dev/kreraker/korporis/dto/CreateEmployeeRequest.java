@@ -17,52 +17,52 @@ import java.time.LocalDate;
 
 public class CreateEmployeeRequest {
 
-    @NotBlank(message = "First name is required")
-    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
-    public String firstName;
+   @NotBlank(message = "First name is required")
+   @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
+   public String firstName;
 
-    @NotBlank(message = "Last name is required")
-    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
-    public String lastName;
+   @NotBlank(message = "Last name is required")
+   @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
+   public String lastName;
 
-    @NotBlank(message = "DPI is required")
-    @Size(min = 13, max = 13, message = "DPI must be exactly 13 characters")
-    @Pattern(regexp = "^[0-9]{13}$", message = "DPI must contain only 13 digits")
-    public String dpi;
+   @NotBlank(message = "DPI is required")
+   @Size(min = 13, max = 13, message = "DPI must be exactly 13 characters")
+   @Pattern(regexp = "^[0-9]{13}$", message = "DPI must contain only 13 digits")
+   public String dpi;
 
-    @Past(message = "Birth date must be in the past")
-    public LocalDate birthDate;
+   @Past(message = "Birth date must be in the past")
+   public LocalDate birthDate;
 
-    public Gender gender;
+   public Gender gender;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Size(max = 100, message = "Email cannot exceed 100 characters")
-    public String email;
+   @NotBlank(message = "Email is required")
+   @Email(message = "Email must be valid")
+   @Size(max = 100, message = "Email cannot exceed 100 characters")
+   public String email;
 
-    @Size(max = 20, message = "Phone number cannot exceed 20 characters")
-    public String phone;
+   @Size(max = 20, message = "Phone number cannot exceed 20 characters")
+   public String phone;
 
-    @Size(max = 300, message = "Address cannot exceed 300 characters")
-    public String address;
+   @Size(max = 300, message = "Address cannot exceed 300 characters")
+   public String address;
 
-    @NotNull(message = "Hire date is required")
-    @PastOrPresent(message = "Hire date cannot be in the future")
-    public LocalDate hireDate;
+   @NotNull(message = "Hire date is required")
+   @PastOrPresent(message = "Hire date cannot be in the future")
+   public LocalDate hireDate;
 
-    @NotBlank(message = "Position is required")
-    @Size(min = 2, max = 100, message = "Position must be between 2 and 100 characters")
-    public String position;
+   @NotBlank(message = "Position is required")
+   @Size(min = 2, max = 100, message = "Position must be between 2 and 100 characters")
+   public String position;
 
-    @NotNull(message = "Salary is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
-    @Digits(integer = 10, fraction = 2, message = "Salary must have at most 10 integer digits and 2 decimal places")
-    public BigDecimal salary;
+   @NotNull(message = "Salary is required")
+   @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
+   @Digits(integer = 10, fraction = 2, message = "Salary must have at most 10 integer digits and 2 decimal places")
+   public BigDecimal salary;
 
-    @NotNull(message = "Contract type is required")
-    public ContractType contractType;
+   @NotNull(message = "Contract type is required")
+   public ContractType contractType;
 
-    public Long departmentId;
+   public Long departmentId;
 
-    public Long supervisorId;
+   public Long supervisorId;
 }

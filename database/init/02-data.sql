@@ -36,3 +36,15 @@ UPDATE departments SET manager_id = 1 WHERE code = 'IT';
 UPDATE departments SET manager_id = 5 WHERE code = 'HR';
 UPDATE departments SET manager_id = 7 WHERE code = 'FIN';
 UPDATE departments SET manager_id = 9 WHERE code = 'SALES';
+
+-- Insert IT Sub-Departments (parent = IT department, id = 1)
+INSERT INTO departments (code, name, description, location, parent_department_id, active) VALUES
+('IT-DEV',  'Development',        'Software development and engineering team',          'Building A, Floor 3', 1, TRUE),
+('IT-SUP',  'Technical Support',  'Handles internal and external technical support',    'Building A, Floor 3', 1, TRUE),
+('IT-DBA',  'Database',           'Database administration and data management',        'Building A, Floor 3', 1, TRUE),
+('IT-QA',   'Quality Assurance',  'Software testing and quality control',               'Building A, Floor 3', 1, TRUE),
+('IT-INFRA','Infrastructure',     'Network, servers, and cloud infrastructure',         'Building A, Floor 3', 1, TRUE);
+
+-- Update IT sub-department managers (reuse existing IT employees)
+UPDATE departments SET manager_id = 2 WHERE code = 'IT-DEV';   -- Maria Garcia (Development Lead)
+UPDATE departments SET manager_id = 3 WHERE code = 'IT-QA';    -- Juan Lopez (Senior Developer)

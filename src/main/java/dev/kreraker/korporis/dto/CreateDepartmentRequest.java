@@ -20,4 +20,7 @@ public class CreateDepartmentRequest {
     public String location;
 
     public Long managerId;
+
+    /** Optional ID of the parent department. Null means this is a root department. */
+    public Long parentDepartmentId;
 }

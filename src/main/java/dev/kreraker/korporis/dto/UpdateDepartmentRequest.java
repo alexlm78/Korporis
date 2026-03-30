@@ -19,4 +19,10 @@ public class UpdateDepartmentRequest {
     public Long managerId;
 
     public Boolean active;
+
+    /**
+     * Optional ID of the new parent department.
+     * Set to null explicitly via the dedicated endpoint to remove the parent.
+     */
+    public Long parentDepartmentId;
 }
