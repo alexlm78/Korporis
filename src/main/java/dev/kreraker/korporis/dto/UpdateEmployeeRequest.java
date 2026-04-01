@@ -16,48 +16,48 @@ import java.time.LocalDate;
 
 public class UpdateEmployeeRequest {
 
-    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
-    public String firstName;
+   @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
+   public String firstName;
 
-    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
-    public String lastName;
+   @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
+   public String lastName;
 
-    @Size(min = 13, max = 13, message = "DPI must be exactly 13 characters")
-    @Pattern(regexp = "^[0-9]{13}$", message = "DPI must contain only 13 digits")
-    public String dpi;
+   @Size(min = 13, max = 13, message = "DPI must be exactly 13 characters")
+   @Pattern(regexp = "^[0-9]{13}$", message = "DPI must contain only 13 digits")
+   public String dpi;
 
-    @Past(message = "Birth date must be in the past")
-    public LocalDate birthDate;
+   @Past(message = "Birth date must be in the past")
+   public LocalDate birthDate;
 
-    public Gender gender;
+   public Gender gender;
 
-    @Email(message = "Email must be valid")
-    @Size(max = 100, message = "Email cannot exceed 100 characters")
-    public String email;
+   @Email(message = "Email must be valid")
+   @Size(max = 100, message = "Email cannot exceed 100 characters")
+   public String email;
 
-    @Size(max = 20, message = "Phone number cannot exceed 20 characters")
-    public String phone;
+   @Size(max = 20, message = "Phone number cannot exceed 20 characters")
+   public String phone;
 
-    @Size(max = 300, message = "Address cannot exceed 300 characters")
-    public String address;
+   @Size(max = 300, message = "Address cannot exceed 300 characters")
+   public String address;
 
-    @PastOrPresent(message = "Hire date cannot be in the future")
-    public LocalDate hireDate;
+   @PastOrPresent(message = "Hire date cannot be in the future")
+   public LocalDate hireDate;
 
-    public LocalDate terminationDate;
+   public LocalDate terminationDate;
 
-    @Size(min = 2, max = 100, message = "Position must be between 2 and 100 characters")
-    public String position;
+   @Size(min = 2, max = 100, message = "Position must be between 2 and 100 characters")
+   public String position;
 
-    @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
-    @Digits(integer = 10, fraction = 2, message = "Salary must have at most 10 integer digits and 2 decimal places")
-    public BigDecimal salary;
+   @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
+   @Digits(integer = 10, fraction = 2, message = "Salary must have at most 10 integer digits and 2 decimal places")
+   public BigDecimal salary;
 
-    public ContractType contractType;
+   public ContractType contractType;
 
-    public EmployeeStatus status;
+   public EmployeeStatus status;
 
-    public Long departmentId;
+   public Long departmentId;
 
-    public Long supervisorId;
+   public Long supervisorId;
 }

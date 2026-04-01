@@ -9,11 +9,11 @@ import static org.hamcrest.Matchers.is;
 @QuarkusTest
 class KorporisApplicationTests {
 
-    @Test
-    void healthCheck() {
-        given()
-                .when().get("/api/departments")
-                .then()
-                .statusCode(200);
-    }
+   @Test
+   void healthCheck() {
+      given()
+         .when().get("/api/departments")
+         .then()
+         .statusCode(200);
+   }
 }
